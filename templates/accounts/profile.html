@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile — FoodFlow{% endblock %}
+
+{% block content %}
+<style>
+    .profile-layout {
+        position: relative;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+
+    .profile-layout > .form-card {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .picture-panel {
+        position: absolute;
+        top: 0;
+        left: calc(100% + 24px);
+        width: 280px;
+        padding: 26px;
+        box-sizing: border-box;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+        text-align: center;
+    }
+
+    .picture-panel h3 {
+        margin: 0 0 24px;
+        color: var(--green-700);
+        text-align: left;
+        font-size: 1.2rem;
+    }
+
+    .picture-avatar {
+        width: 150px;
+        height: 150px;
+        margin: 0 auto 24px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: #e5e7eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .picture-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .picture-avatar svg {
+        width: 110px;
+        height: 110px;
+        color: #9ca3af;
+    }
+
+    .picture-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .picture-actions > form {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .picture-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 40px;
+        padding: 8px 12px;
+        box-sizing: border-box;
+        border: 1px solid #d5deea;
+        border-radius: 9px;
+        background: #f5f7fa;
+        color: #17202e;
+        font: inherit;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .picture-button-add {
+        background: var(--green-700);
+        border-color: var(--green-700);
+        color: white;
+    }
+
+    .picture-button-remove {
+        background: white;
+        border-color: #f87171;
+        color: #dc2626;
+    }
+
+    .picture-input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .picture-upload:focus-within .picture-button {
+        outline: 2px solid var(--green-700);
+        outline-offset: 3px;
+    }
+
+    .picture-help {
+        margin: 16px 0 0;
+        color: var(--grey-500);
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+
+    .picture-button[hidden] {
+        display: none;
+    }
+
+    @media (max-width: 1350px) {
+        .profile-layout {
+            max-width: 1000px;
+            display: grid;
+            grid-template-columns: minmax(0, 700px) 260px;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .picture-panel {
+            position: static;
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 850px) {
+        .profile-layout {
+            display: flex;
+            flex-direction: column;
+            max-width: 700px;
+        }
+
+        .picture-panel {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="profile-layout">
+<div class="form-card" style="max-width: 700px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <div>
+            <h2 style="color: var(--green-700);">My Profile</h2>
+            <p style="color: var(--grey-500); font-size: 0.9rem;">
+                Role: <strong>{{ user.get_role_display }}</strong>
+            </p>
+        </div>
+        <div>
+            {% if user.is_superuser or user.is_staff %}
+                <span class="badge badge-available" style="font-size: 0.85rem;">Staff Administrator</span>
+            {% elif profile and profile.is_verified %}
+                <span class="badge badge-available" style="font-size: 0.85rem;">✓ Verified Account</span>
+            {% else %}
+                <span class="badge badge-claimed" style="font-size: 0.85rem;">Pending Admin Verification</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <h4 style="color: var(--ink); margin-bottom: 0.75rem;">Account Information</h4>
+        <div class="form-group">
+            <label class="form-label">Full Name</label>
+            {{ form.full_name }}
+            {% if form.full_name.errors %}<div class="form-error">{{ form.full_name.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                {{ form.email }}
+                {% if form.email.errors %}<div class="form-error">{{ form.email.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                {{ form.phone }}
+                {% if form.phone.errors %}<div class="form-error">{{ form.phone.errors.0 }}</div>{% endif %}
+            </div>
+        </div>
+
+        {% if user.is_donor or user.is_recipient %}
+        <div class="form-group">
+            <label class="form-label">
+                {% if user.is_donor %}
+                    Business / Organization Name
+                {% else %}
+                    Organization Name
+                {% endif %}
+            </label>
+
+            {{ form.organization_name }}
+            {% if form.organization_name.errors %}<div class="form-error">{{ form.organization_name.errors.0 }}</div>{% endif %}
+        </div>
+        {% endif %}
+
+        <h4 style="color: var(--ink); margin: 1.5rem 0 0.75rem;">Primary Location</h4>
+        <div class="form-group">
+            <label class="form-label">Street Address</label>
+            {{ form.address }}
+            {% if form.address.errors %}<div class="form-error">{{ form.address.errors.0 }}</div>{% endif %}
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Area / Neighborhood</label>
+                {{ form.area }}
+                {% if form.area.errors %}<div class="form-error">{{ form.area.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="form-group">
+                <label class="form-label">City</label>
+                {{ form.city }}
+                {% if form.city.errors %}<div class="form-error">{{ form.city.errors.0 }}</div>{% endif %}
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">
+            Save Profile Changes
+        </button>
+    </form>
+</div>
+
+    <aside class="picture-panel">
+        <h3>Profile Picture</h3>
+
+        <div class="picture-avatar">
+            {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}"
+                     alt="Your profile picture">
+            {% else %}
+                <svg viewBox="0 0 100 100"
+                     fill="currentColor"
+                     aria-hidden="true">
+                    <circle cx="50" cy="32" r="19"></circle>
+                    <path d="M12 92v-9a38 38 0 0 1 76 0v9z"></path>
+                </svg>
+            {% endif %}
+        </div>
+
+        <div class="picture-actions">
+            <form method="post"
+                  action="{% url 'accounts:profile_picture_update' %}"
+                  enctype="multipart/form-data"
+                  class="picture-upload">
+                {% csrf_token %}
+
+                <input type="file"
+                       name="profile_picture"
+                       id="profile-picture-input"
+                       class="picture-input"
+                       accept="image/jpeg,image/png,image/webp"
+                       required>
+
+                <label for="profile-picture-input"
+                       class="picture-button {% if not user.profile_picture %}picture-button-add{% endif %}">
+                    {% if user.profile_picture %}
+                        Replace
+                    {% else %}
+                        Add Picture
+                    {% endif %}
+                </label>
+
+                <button type="submit"
+                        id="picture-upload-button"
+                        class="picture-button"
+                        style="margin-top: 8px;">
+                    Upload Selected Picture
+                </button>
+            </form>
+
+            {% if user.profile_picture %}
+                <form method="post"
+                      action="{% url 'accounts:profile_picture_delete' %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="picture-button picture-button-remove">
+                        Remove
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+
+        <p class="picture-help">
+            JPG, PNG or WebP. Maximum 5 MB.
+        </p>
+    </aside>
+</div>
+
+<script>
+    (() => {
+        const input = document.getElementById('profile-picture-input');
+        const uploadButton = document.getElementById('picture-upload-button');
+
+        if (!input || !uploadButton) return;
+
+        uploadButton.hidden = true;
+
+        input.addEventListener('change', () => {
+            if (input.files.length > 0) {
+                input.form.requestSubmit();
+            }
+        });
+    })();
+</script>
+{% endblock %}
+

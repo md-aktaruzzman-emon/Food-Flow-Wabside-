@@ -1,0 +1,62 @@
+{% load static %}
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container navbar-container">
+        <!-- Brand Logo & Name -->
+        <a href="{% url 'home' %}" class="brand" aria-label="FoodFlow homepage">
+            <img src="{% static 'images/logo.svg' %}" alt="" class="brand-logo-img" width="36" height="36" aria-hidden="true">
+            <span class="brand-name">
+                <span class="brand-name-food">Food</span><span class="brand-name-flow">Flow</span>
+            </span>
+        </a>
+
+        <!-- Mobile Navigation Hamburger Button -->
+        <button class="nav-toggle" id="nav-toggle-btn" type="button" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="nav-links-menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+
+        <!-- Navigation Links Menu -->
+        <ul class="nav-links" id="nav-links-menu">
+            {% if user.is_authenticated %}
+                {% if user.is_donor %}
+                    <!-- Donor Specific Links -->
+                    <li><a href="{% url 'accounts:donor_dashboard' %}" class="nav-link">Dashboard</a></li>
+                    <li><a href="{% url 'listings:donor_listings' %}" class="nav-link">My Listings</a></li>
+                    <li><a href="{% url 'claims:my_claims' %}" class="nav-link">Incoming Claims</a></li>
+                    <li><a href="{% url 'claims:verify_pickup' %}" class="nav-link">Verify Pickup</a></li>
+                    <li><a href="{% url 'listings:donor_listing_create' %}" class="btn btn-primary btn-sm">+ Donate Food</a></li>
+                {% elif user.is_recipient %}
+                    <!-- Recipient Specific Links -->
+                    <li><a href="{% url 'accounts:recipient_dashboard' %}" class="nav-link">Dashboard</a></li>
+                    <li><a href="{% url 'listings:browse_food' %}" class="nav-link">Browse Food</a></li>
+                    <li><a href="{% url 'claims:my_claims' %}" class="nav-link">My Claims</a></li>
+                    <li>
+                        <a href="{% url 'notifications:notification_list' %}" class="nav-link" aria-label="Notifications{% if unread_notifications_count > 0 %}, {{ unread_notifications_count }} unread{% endif %}">
+                            Notifications
+                            <span id="navbar-unread-badge" class="badge-counter" aria-live="polite" {% if unread_notifications_count == 0 %}style="display: none;"{% endif %}>
+                                {{ unread_notifications_count }}
+                            </span>
+                        </a>
+                    </li>
+                {% endif %}
+
+                <!-- Shared Authenticated Navigation -->
+                <li><a href="{% url 'accounts:profile' %}" class="nav-link">Profile</a></li>
+                {% if user.is_staff %}
+                    <li><a href="{% url 'admin:index' %}" class="nav-link" target="_blank" rel="noopener">Admin Panel</a></li>
+                {% endif %}
+                <li>
+                    <a href="{% url 'accounts:logout' %}" class="btn btn-secondary btn-sm">Log Out</a>
+                </li>
+            {% else %}
+                <!-- Guest / Public Navigation -->
+                <li><a href="{% url 'home' %}" class="nav-link">Home</a></li>
+                <li><a href="{% url 'accounts:login' %}" class="nav-link">Log In</a></li>
+                <li><a href="{% url 'accounts:register' %}" class="btn btn-primary btn-sm">Join FoodFlow</a></li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>

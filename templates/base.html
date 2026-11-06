@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FoodFlow — Expiry-Aware Community Food Donation Platform{% endblock %}</title>
+    
+    <!-- Meta tags for sharing and accessibility -->
+    <meta name="description" content="FoodFlow connects restaurants, grocers, and households with verified local recipients to share surplus food safely before it expires.">
+    <meta name="theme-color" content="#065f46">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{% static 'images/favicon.svg' %}">
+    
+    <!-- FoodFlow Design System Stylesheet -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Accessible Skip to Content Link (WCAG 2.4.1) -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Sticky Navbar Partial -->
+    {% include 'partials/navbar.html' %}
+
+    <!-- Main Content Area -->
+    <main id="main-content" tabindex="-1">
+        <div class="container">
+            <!-- Messages & Alerts Partial -->
+            {% include 'partials/messages.html' %}
+            
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer Partial -->
+    {% include 'partials/footer.html' %}
+
+    <!-- Global City Suggestions Datalist for Addresses -->
+    <datalist id="city-suggestions">
+        <option value="Dhaka">
+        <option value="Gazipur">
+        <option value="Barishal">
+        <option value="Savar">
+        <option value="Chattogram">
+        <option value="Sylhet">
+    </datalist>
+
+    <!-- Vanilla JavaScript Micro-Interactions -->
+    <script src="{% static 'js/countdown.js' %}"></script>
+    <script src="{% static 'js/claims.js' %}"></script>
+    <script src="{% static 'js/notifications.js' %}"></script>
+    <script src="{% static 'js/gallery.js' %}"></script>
+
+    <!-- Global App Enhancements (Mobile Nav Toggle, Password Visibility, Copy Token) -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mobile Navigation Toggle
+        const navToggle = document.getElementById('nav-toggle-btn');
+        const navLinks = document.getElementById('nav-links-menu');
+        if (navToggle && navLinks) {
+            navToggle.addEventListener('click', function() {
+                const isOpen = navLinks.classList.toggle('is-open');
+                navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+        }
+
+        // Global Copy-to-Clipboard for pickup codes
+        document.querySelectorAll('.copy-token-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const token = this.getAttribute('data-token');
+                if (token && navigator.clipboard) {
+                    navigator.clipboard.writeText(token).then(() => {
+                        const originalText = this.textContent;
+                        this.textContent = '✓ Copied!';
+                        setTimeout(() => {
+                            this.textContent = originalText;
+                        }, 2000);
+                    }).catch(() => {});
+                }
+            });
+        });
+
+        // Password visibility toggles
+        document.querySelectorAll('.password-toggle-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                if (input) {
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        this.textContent = 'Hide';
+                        this.setAttribute('aria-label', 'Hide password');
+                    } else {
+                        input.type = 'password';
+                        this.textContent = 'Show';
+                        this.setAttribute('aria-label', 'Show password');
+                    }
+                }
+            });
+        });
+    });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
