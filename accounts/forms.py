@@ -100,10 +100,21 @@ class UserRegistrationForm(forms.ModelForm):
         password = cleaned_data.get("password")
         password_confirm = cleaned_data.get("password_confirm")
 
-        # Simplified password rule: verify only password equality
+        # Verify password equality and run Django password validation suite
         if password and password_confirm:
             if password != password_confirm:
                 self.add_error('password_confirm', "Passwords do not match.")
+            else:
+                from django.contrib.auth.password_validation import validate_password
+                temp_user = User(
+                    username=cleaned_data.get('username', ''),
+                    email=cleaned_data.get('email', ''),
+                    full_name=cleaned_data.get('full_name', '')
+                )
+                try:
+                    validate_password(password, user=temp_user)
+                except forms.ValidationError as e:
+                    self.add_error('password', e)
 
         role = cleaned_data.get("role")
         if role == User.ROLE_DONOR:
@@ -203,19 +214,24 @@ class ProfilePictureForm(forms.ModelForm):
         fields = ['profile_picture']
 
     def clean_profile_picture(self):
-        picture = self.cleaned_data['profile_picture']
+        picture = self.cleaned_data.get('profile_picture')
+        if not picture:
+            return picture
 
         if picture.size > 5 * 1024 * 1024:
-            raise forms.ValidationError(
-                "Profile picture must not exceed 5 MB."
-            )
+            raise forms.ValidationError("Profile picture must not exceed 5 MB.")
 
-        uploaded_image = getattr(picture, 'image', None)
-
-        if uploaded_image is not None:
-            if uploaded_image.format not in ['JPEG', 'PNG', 'WEBP']:
-                raise forms.ValidationError(
-                    "Only JPG, PNG and WebP images are allowed."
-                )
+        try:
+            from PIL import Image
+            picture.seek(0)
+            img = Image.open(picture)
+            img.verify()
+            if img.format not in ['JPEG', 'PNG', 'WEBP']:
+                raise forms.ValidationError("Only JPG, PNG and WebP images are allowed.")
+            picture.seek(0)
+        except forms.ValidationError:
+            raise
+        except Exception:
+            raise forms.ValidationError("Uploaded file is not a valid image.")
 
         return picture

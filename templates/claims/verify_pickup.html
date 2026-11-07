@@ -1,24 +1,59 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Verify Food Pickup — FoodFlow{% endblock %}
+{% block title %}Verify Food Pickup Token — FoodFlow{% endblock %}
 
 {% block content %}
-<div class="form-card" style="max-width: 550px; margin-bottom: 2.5rem;">
-    <h2 style="color: var(--green-700); margin-bottom: 0.5rem; text-align: center;">Verify Food Pickup</h2>
-    <p style="color: var(--grey-500); text-align: center; margin-bottom: 1.5rem;">
-        Enter the 8-character verification token provided by the recipient during physical handover.
-    </p>
+<div class="form-card" style="max-width: 580px; margin-bottom: 3rem;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <span class="section-eyebrow">PHYSICAL HANDOVER</span>
+        <h1 style="color: var(--color-ink-900); font-size: clamp(1.5rem, 3vw, 1.875rem); font-weight: 800; margin: 0 0 0.5rem;">
+            Verify Food Handover
+        </h1>
+        <p style="color: var(--color-ink-600); font-size: 0.9375rem; margin: 0; line-height: 1.6;">
+            Enter the 8-character verification token provided by the recipient during physical handover to complete the food rescue.
+        </p>
+    </div>
 
-    <form method="post" novalidate>
+    <form method="post" novalidate id="verify-form">
         {% csrf_token %}
 
-        <div class="form-group">
-            <label class="form-label" style="text-align: center; display: block;">Recipient's 8-Character Pickup Code</label>
-            {{ form.pickup_code }}
-            {% if form.pickup_code.errors %}<div class="form-error" style="text-align: center;">{{ form.pickup_code.errors.0 }}</div>{% endif %}
+        {% if form.non_field_errors %}
+            <div class="alert alert-error" role="alert">
+                {% for error in form.non_field_errors %}
+                    <span>{{ error }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="form-group" style="text-align: center;">
+            <label for="{{ form.pickup_code.id_for_label }}" class="form-label" style="font-size: 0.95rem; font-weight: 700; color: var(--color-ink-800); margin-bottom: 0.75rem;">
+                Recipient's 8-Character Pickup Code
+            </label>
+
+            <div style="max-width: 280px; margin: 0 auto;">
+                <input type="text"
+                       name="pickup_code"
+                       id="{{ form.pickup_code.id_for_label }}"
+                       value="{{ form.pickup_code.value|default_if_none:'' }}"
+                       placeholder="e.g. A1B2C3D4"
+                       maxlength="8"
+                       autocomplete="off"
+                       autocapitalize="characters"
+                       spellcheck="false"
+                       required
+                       class="form-input {% if form.pickup_code.errors %}is-invalid{% endif %}"
+                       style="font-family: var(--font-mono); font-size: 1.6rem; font-weight: 800; letter-spacing: 0.2em; text-align: center; text-transform: uppercase;">
+            </div>
+
+            {% if form.pickup_code.errors %}
+                <div class="form-error" style="justify-content: center; margin-top: 0.5rem;">
+                    {{ form.pickup_code.errors.0 }}
+                </div>
+            {% endif %}
         </div>
 
-        <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1rem;">
+        <button type="submit" id="submit-verify-btn" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1.5rem;">
             Verify & Complete Handover
         </button>
     </form>
@@ -26,28 +61,34 @@
 
 <!-- Recent Completed Pickups -->
 {% if recent_pickups %}
-<div class="card" style="max-width: 800px; margin: 0 auto;">
-    <h3 style="color: var(--ink); margin-bottom: 1rem;">Recent Verified Handover Records</h3>
-    <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem;">
+<div class="card" style="max-width: 900px; margin: 0 auto;">
+    <div class="card-header" style="border-bottom: 1px solid var(--color-border-subtle); padding-bottom: 1rem;">
+        <div>
+            <h2 class="card-title" style="font-size: 1.25rem;">Recent Verified Handover Records</h2>
+            <span class="card-subtitle">Completed surplus handovers associated with your donations.</span>
+        </div>
+    </div>
+
+    <div tabindex="0" role="region" aria-label="Recent verified handover records table" style="overflow-x: auto; margin-top: 1rem; -webkit-overflow-scrolling: touch;">
+        <table style="width: 100%; min-width: 540px; border-collapse: collapse; font-size: 0.9375rem;">
             <thead>
-                <tr style="text-align: left; border-bottom: 2px solid var(--grey-200); color: var(--grey-700);">
-                    <th style="padding: 0.75rem 0.5rem;">Claim ID</th>
-                    <th style="padding: 0.75rem 0.5rem;">Food Item</th>
-                    <th style="padding: 0.75rem 0.5rem;">Quantity</th>
-                    <th style="padding: 0.75rem 0.5rem;">Recipient</th>
-                    <th style="padding: 0.75rem 0.5rem;">Status</th>
+                <tr style="text-align: left; border-bottom: 2px solid var(--color-border-main); color: var(--color-ink-600); background-color: var(--color-bg-subtle);">
+                    <th style="padding: 0.85rem 0.75rem;">Claim ID</th>
+                    <th style="padding: 0.85rem 0.75rem;">Food Item</th>
+                    <th style="padding: 0.85rem 0.75rem;">Quantity</th>
+                    <th style="padding: 0.85rem 0.75rem;">Recipient</th>
+                    <th style="padding: 0.85rem 0.75rem; text-align: right;">Status</th>
                 </tr>
             </thead>
             <tbody>
                 {% for claim in recent_pickups %}
-                <tr style="border-bottom: 1px solid var(--grey-200);">
-                    <td style="padding: 0.75rem 0.5rem;">#{{ claim.id }}</td>
-                    <td style="padding: 0.75rem 0.5rem;">{{ claim.listing.food_name }}</td>
-                    <td style="padding: 0.75rem 0.5rem;">{{ claim.claimed_quantity|floatformat:2 }} {{ claim.listing.unit }}</td>
-                    <td style="padding: 0.75rem 0.5rem;">{{ claim.recipient.user.full_name }}</td>
-                    <td style="padding: 0.75rem 0.5rem;">
-                        <span class="badge badge-completed">Completed</span>
+                <tr style="border-bottom: 1px solid var(--color-border-subtle);">
+                    <td style="padding: 0.85rem 0.75rem; font-weight: 600; color: var(--color-ink-900);">#{{ claim.id }}</td>
+                    <td style="padding: 0.85rem 0.75rem; font-weight: 600;">{{ claim.listing.food_name }}</td>
+                    <td style="padding: 0.85rem 0.75rem;">{{ claim.claimed_quantity|floatformat:2 }} {{ claim.listing.unit }}</td>
+                    <td style="padding: 0.85rem 0.75rem;">{{ claim.recipient.user.full_name|default:claim.recipient.user.username }}</td>
+                    <td style="padding: 0.85rem 0.75rem; text-align: right;">
+                        <span class="badge badge-completed">✓ Handover Completed</span>
                     </td>
                 </tr>
                 {% endfor %}

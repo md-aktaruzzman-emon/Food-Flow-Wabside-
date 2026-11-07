@@ -1,472 +1,258 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Register — FoodFlow{% endblock %}
+{% block title %}Create Account — FoodFlow{% endblock %}
 
 {% block content %}
-
-<div style="
-    display: flex;
-    flex-wrap: wrap;
-    max-width: 1180px;
-    margin: 2rem auto 4rem;
-    background: #fffdf8;
-    border: 1px solid #e4dfd3;
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: 0 16px 45px rgba(30, 55, 39, 0.10);
-">
-
-    <!-- Left: photo and introduction -->
-    <div style="
-        position: relative;
-        flex: 1 1 500px;
-        min-width: 0;
-        min-height: 460px;
-        background: #234b39;
-        overflow: hidden;
-        isolation: isolate;
-    ">
-
-        <img
-            src="{% static 'images/register.jpg' %}"
-            alt="Sharing food with the community"
-            style="
-                position: absolute;
-                inset: 0;
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                object-position: center;
-                z-index: -2;
-            "
-        >
-
-        <div style="
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(
-                180deg,
-                rgba(12, 35, 24, 0.12) 0%,
-                rgba(12, 35, 24, 0.30) 40%,
-                rgba(12, 35, 24, 0.92) 100%
-            );
-            z-index: -1;
-        "></div>
-
-        <div style="
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
-            min-height: 460px;
-            padding: clamp(1.75rem, 4vw, 3rem);
-            box-sizing: border-box;
-        ">
-
-            <div style="
-                color: #ffffff;
-                font-size: 1.6rem;
-                font-weight: 800;
-                letter-spacing: -0.5px;
-            ">
-                FoodFlow<span style="color: #c8dc9b;">.</span>
+<div class="auth-page-container" style="max-width: 820px; margin: 0 auto;">
+    <div class="form-card" style="padding: clamp(1.75rem, 4vw, 3rem);">
+        <div class="auth-header text-center" style="margin-bottom: 2rem;">
+            <div class="auth-brand-badge" aria-hidden="true" style="margin: 0 auto 1rem; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: var(--color-primary-50); border-radius: var(--radius-md);">
+                <img src="{% static 'images/logo.svg' %}" alt="" width="36" height="36">
             </div>
-
-            <div style="padding-top: 5rem;">
-
-                <p style="
-                    margin: 0 0 1rem;
-                    color: #d6e7bd;
-                    font-size: 0.75rem;
-                    font-weight: 700;
-                    letter-spacing: 2px;
-                ">
-                    FOOD · PEOPLE · COMMUNITY
-                </p>
-
-                <h2 style="
-                    margin: 0 0 1.25rem;
-                    color: #ffffff;
-                    font-size: clamp(2rem, 3.5vw, 3rem);
-                    line-height: 1.15;
-                    font-weight: 800;
-                ">
-                    A little sharing.<br>
-                    A stronger community.
-                </h2>
-
-                <p style="
-                    max-width: 360px;
-                    margin: 0;
-                    color: #e3ebe2;
-                    font-size: 1rem;
-                    line-height: 1.85;
-                ">
-                    Join FoodFlow to share surplus food or collect
-                    donations before they expire. Together, we can
-                    reduce waste and help food reach the people
-                    who need it.
-                </p>
-
-                <div style="
-                    width: 55px;
-                    height: 4px;
-                    margin-top: 1.75rem;
-                    background: #c8dc9b;
-                    border-radius: 10px;
-                "></div>
-
-            </div>
-
+            <h1 class="auth-title" style="font-size: clamp(1.75rem, 3vw, 2.25rem); font-weight: 800; color: var(--color-ink-900); margin-bottom: 0.5rem;">
+                Join FoodFlow Community
+            </h1>
+            <p class="auth-subtitle" style="color: var(--color-ink-600); max-width: 580px; margin: 0 auto;">
+                Connect with local surplus food donors or register as a recipient to help eliminate community food waste before it expires.
+            </p>
         </div>
-    </div>
 
-    <!-- Right: existing registration form -->
-    <div style="
-        flex: 1.3 1 480px;
-        min-width: 0;
-        padding: clamp(1.5rem, 4vw, 3.25rem);
-        box-sizing: border-box;
-    ">
-
-        <p style="
-            margin: 0 0 0.6rem;
-            color: #6d7c60;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-        ">
-            EVERY CONTRIBUTION COUNTS
-        </p>
-
-        <h1 style="
-            margin: 0 0 0.75rem;
-            color: #214c38;
-            font-size: clamp(1.8rem, 3vw, 2.4rem);
-            line-height: 1.2;
-        ">
-            Join FoodFlow
-        </h1>
-
-        <p style="
-            margin: 0 0 2rem;
-            color: #73766c;
-            font-size: 0.95rem;
-            line-height: 1.75;
-        ">
-            Create your account to share surplus food or find
-            available donations in your community.
-        </p>
-
-        <form method="post" novalidate>
-
+        <form method="post" novalidate id="register-form">
             {% csrf_token %}
 
             {% if form.non_field_errors %}
-                <div class="alert alert-danger"
-                     style="margin-bottom: 1.25rem;">
+                <div class="alert alert-error" role="alert">
                     {% for error in form.non_field_errors %}
-                        <p style="margin: 0;">{{ error }}</p>
+                        <span>{{ error }}</span>
                     {% endfor %}
                 </div>
             {% endif %}
 
-            <div class="form-group">
-                <label class="form-label"
-                       for="{{ form.role.id_for_label }}">
-                    I want to register as a:
+            <!-- Role Selection -->
+            <div class="form-group" style="background: var(--color-bg-subtle); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--color-border-main); margin-bottom: 1.75rem;">
+                <label class="form-label" for="{{ form.role.id_for_label }}" style="font-size: 1rem; color: var(--color-primary-900); font-weight: 700; margin-bottom: 0.5rem;">
+                    I want to join FoodFlow as:
                 </label>
-
                 {{ form.role }}
-
                 {% for error in form.role.errors %}
                     <div class="form-error">{{ error }}</div>
                 {% endfor %}
+                <p class="form-help" style="margin-top: 0.5rem; color: var(--color-ink-600);">
+                    <strong>Donors</strong> share surplus food (restaurants, grocers, households). <strong>Recipients</strong> claim available donations (charities, shelters, individuals).
+                </p>
             </div>
 
+            <!-- Personal Contact Details -->
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--color-ink-900); margin: 1.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border-subtle);">
+                Account & Contact Information
+            </h3>
+
             <div class="form-group">
-                <label class="form-label"
-                       for="{{ form.full_name.id_for_label }}">
-                    Full Name
+                <label class="form-label" for="{{ form.full_name.id_for_label }}">
+                    Full Name <span style="color: var(--color-danger-main);">*</span>
                 </label>
-
                 {{ form.full_name }}
-
                 {% for error in form.full_name.errors %}
                     <div class="form-error">{{ error }}</div>
                 {% endfor %}
             </div>
 
             <div class="form-row">
-
                 <div class="form-group">
-                    <label class="form-label"
-                           for="{{ form.username.id_for_label }}">
-                        Username
+                    <label class="form-label" for="{{ form.username.id_for_label }}">
+                        Username <span style="color: var(--color-danger-main);">*</span>
                     </label>
-
                     {{ form.username }}
-
                     {% for error in form.username.errors %}
                         <div class="form-error">{{ error }}</div>
                     {% endfor %}
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label"
-                           for="{{ form.email.id_for_label }}">
-                        Email Address
+                    <label class="form-label" for="{{ form.email.id_for_label }}">
+                        Email Address <span style="color: var(--color-danger-main);">*</span>
                     </label>
-
                     {{ form.email }}
-
                     {% for error in form.email.errors %}
                         <div class="form-error">{{ error }}</div>
                     {% endfor %}
                 </div>
-
             </div>
 
             <div class="form-group">
-                <label class="form-label"
-                       for="{{ form.phone.id_for_label }}">
-                    Phone Number
+                <label class="form-label" for="{{ form.phone.id_for_label }}">
+                    Contact Telephone Number
                 </label>
-
                 {{ form.phone }}
-
                 {% for error in form.phone.errors %}
                     <div class="form-error">{{ error }}</div>
                 {% endfor %}
+                <p class="form-help">Used by donors/recipients during physical pickup coordination.</p>
             </div>
 
-            <!-- Fields shown when Donor is selected -->
-            <div id="donor-fields" style="display: none;">
+            <!-- Role-Specific Fields: Donor -->
+            <div id="donor-fields" style="display: none; background: var(--color-primary-50); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--color-primary-200); margin: 1.5rem 0;">
+                <h4 style="font-size: 1rem; font-weight: 700; color: var(--color-primary-900); margin-bottom: 1rem;">
+                    Donor Profile Details
+                </h4>
 
                 <div class="form-group">
-                    <label class="form-label"
-                           for="{{ form.donor_type.id_for_label }}">
-                        Donor Type
+                    <label class="form-label" for="{{ form.donor_type.id_for_label }}">
+                        Donor Category
                     </label>
-
                     {{ form.donor_type }}
-
                     {% for error in form.donor_type.errors %}
                         <div class="form-error">{{ error }}</div>
                     {% endfor %}
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label"
-                           for="{{ form.organization_name.id_for_label }}">
-                        Business / Organization Name
-                        <span style="
-                            color: var(--grey-500);
-                            font-weight: normal;
-                        ">
-                            (Optional)
-                        </span>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="{{ form.organization_name.id_for_label }}">
+                        Business or Restaurant Name <span style="font-weight: normal; color: var(--color-ink-500);">(Optional for households)</span>
                     </label>
-
                     {{ form.organization_name }}
-
                     {% for error in form.organization_name.errors %}
                         <div class="form-error">{{ error }}</div>
                     {% endfor %}
                 </div>
-
             </div>
 
-            <!-- Fields shown when Recipient is selected -->
-            <div id="recipient-fields" style="display: none;">
+            <!-- Role-Specific Fields: Recipient -->
+            <div id="recipient-fields" style="display: none; background: var(--color-accent-50); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--color-accent-100); margin: 1.5rem 0;">
+                <h4 style="font-size: 1rem; font-weight: 700; color: var(--color-accent-800); margin-bottom: 1rem;">
+                    Recipient Profile Details
+                </h4>
 
                 <div class="form-group">
-                    <label class="form-label"
-                           for="{{ form.recipient_type.id_for_label }}">
-                        Recipient Type
+                    <label class="form-label" for="{{ form.recipient_type.id_for_label }}">
+                        Recipient Organization Type
                     </label>
-
                     {{ form.recipient_type }}
-
                     {% for error in form.recipient_type.errors %}
                         <div class="form-error">{{ error }}</div>
                     {% endfor %}
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label"
-                           for="{{ form.recipient_organization_name.id_for_label }}">
-                        Organization Name
-                        <span style="
-                            color: var(--grey-500);
-                            font-weight: normal;
-                        ">
-                            (Optional)
-                        </span>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="{{ form.recipient_organization_name.id_for_label }}">
+                        Shelter or Organization Name <span style="font-weight: normal; color: var(--color-ink-500);">(Optional for individuals)</span>
                     </label>
-
                     {{ form.recipient_organization_name }}
-
                     {% for error in form.recipient_organization_name.errors %}
                         <div class="form-error">{{ error }}</div>
                     {% endfor %}
-
-                    <p class="form-help">
-                        Recipient profiles must be verified by an
-                        administrator before claiming food.
+                    <p class="form-help" style="color: var(--color-accent-800); margin-top: 0.5rem;">
+                        Note: Recipient profiles are verified by administrators before food reservations can be confirmed.
                     </p>
                 </div>
-
             </div>
 
-            <h3 style="
-                color: #284c39;
-                font-size: 1.05rem;
-                margin: 1.75rem 0 1rem;
-                padding-top: 1.25rem;
-                border-top: 1px solid #e6e4da;
-            ">
-                Location & Address
+            <!-- Location & Address -->
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--color-ink-900); margin: 1.75rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border-subtle);">
+                Primary Physical Address
             </h3>
 
             <div class="form-group">
-                <label class="form-label"
-                       for="{{ form.address.id_for_label }}">
-                    Street Address
+                <label class="form-label" for="{{ form.address.id_for_label }}">
+                    Street Address / Building <span style="color: var(--color-danger-main);">*</span>
                 </label>
-
                 {{ form.address }}
-
                 {% for error in form.address.errors %}
                     <div class="form-error">{{ error }}</div>
                 {% endfor %}
             </div>
 
             <div class="form-row">
-
                 <div class="form-group">
-                    <label class="form-label"
-                           for="{{ form.area.id_for_label }}">
-                        Area / Neighborhood
+                    <label class="form-label" for="{{ form.area.id_for_label }}">
+                        Neighborhood / Area <span style="color: var(--color-danger-main);">*</span>
                     </label>
-
                     {{ form.area }}
-
                     {% for error in form.area.errors %}
                         <div class="form-error">{{ error }}</div>
                     {% endfor %}
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label"
-                           for="{{ form.city.id_for_label }}">
-                        City
+                    <label class="form-label" for="{{ form.city.id_for_label }}">
+                        City <span style="color: var(--color-danger-main);">*</span>
                     </label>
-
                     {{ form.city }}
-
                     {% for error in form.city.errors %}
                         <div class="form-error">{{ error }}</div>
                     {% endfor %}
                 </div>
-
             </div>
 
-            <h3 style="
-                color: #284c39;
-                font-size: 1.05rem;
-                margin: 1.75rem 0 1rem;
-                padding-top: 1.25rem;
-                border-top: 1px solid #e6e4da;
-            ">
-                Security
+            <!-- Password Security -->
+            <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--color-ink-900); margin: 1.75rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border-subtle);">
+                Account Password
             </h3>
 
             <div class="form-row">
-
                 <div class="form-group">
-                    <label class="form-label"
-                           for="{{ form.password.id_for_label }}">
-                        Password
+                    <label class="form-label" for="{{ form.password.id_for_label }}">
+                        Password <span style="color: var(--color-danger-main);">*</span>
                     </label>
-
-                    {{ form.password }}
-
+                    <div class="password-input-wrapper">
+                        {{ form.password }}
+                        <button type="button" class="password-toggle-btn" data-target="{{ form.password.id_for_label }}" aria-label="Show password">
+                            Show
+                        </button>
+                    </div>
                     {% for error in form.password.errors %}
                         <div class="form-error">{{ error }}</div>
                     {% endfor %}
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label"
-                           for="{{ form.password_confirm.id_for_label }}">
-                        Confirm Password
+                    <label class="form-label" for="{{ form.password_confirm.id_for_label }}">
+                        Confirm Password <span style="color: var(--color-danger-main);">*</span>
                     </label>
-
-                    {{ form.password_confirm }}
-
+                    <div class="password-input-wrapper">
+                        {{ form.password_confirm }}
+                        <button type="button" class="password-toggle-btn" data-target="{{ form.password_confirm.id_for_label }}" aria-label="Show password">
+                            Show
+                        </button>
+                    </div>
                     {% for error in form.password_confirm.errors %}
                         <div class="form-error">{{ error }}</div>
                     {% endfor %}
                 </div>
-
             </div>
 
-            <button
-                type="submit"
-                class="btn btn-primary btn-lg"
-                style="
-                    width: 100%;
-                    margin-top: 1.25rem;
-                    padding: 0.95rem 1.25rem;
-                    background: #234f39;
-                    border: 1px solid #234f39;
-                    border-radius: 10px;
-                    color: #ffffff;
-                "
-            >
-                Create Account
+            <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1.5rem;">
+                Create FoodFlow Account
             </button>
-
         </form>
 
-        <p style="
-            text-align: center;
-            margin: 1.5rem 0 0;
-            font-size: 0.95rem;
-            color: #73766c;
-            line-height: 1.7;
-        ">
-            Already have an account?
-            <a href="{% url 'accounts:login' %}"
-               style="color: #234f39; font-weight: 700;">
-                Log in here
-            </a>
-        </p>
-
+        <div class="auth-footer text-center" style="margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--color-border-subtle);">
+            <p style="margin: 0; color: var(--color-ink-600); font-size: 0.9375rem;">
+                Already registered with FoodFlow?
+                <a href="{% url 'accounts:login' %}" style="font-weight: 700; color: var(--color-primary-800);">
+                    Sign in to your account &rarr;
+                </a>
+            </p>
+        </div>
     </div>
-
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const roleSelect = document.getElementById(
-        '{{ form.role.id_for_label|escapejs }}'
-    );
+    const roleSelect = document.getElementById('{{ form.role.id_for_label|escapejs }}');
     const donorFields = document.getElementById('donor-fields');
     const recipientFields = document.getElementById('recipient-fields');
 
     function toggleRoleFields() {
-        if (!roleSelect) {
-            return;
+        if (!roleSelect) return;
+        if (roleSelect.value === 'donor') {
+            donorFields.style.display = 'block';
+            recipientFields.style.display = 'none';
+        } else {
+            donorFields.style.display = 'none';
+            recipientFields.style.display = 'block';
         }
-
-        donorFields.style.display =
-            roleSelect.value === 'donor' ? 'block' : 'none';
-
-        recipientFields.style.display =
-            roleSelect.value === 'recipient' ? 'block' : 'none';
     }
 
     if (roleSelect) {
@@ -475,5 +261,4 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
-
 {% endblock %}

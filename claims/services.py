@@ -143,9 +143,51 @@ class ClaimService:
         return claim
 
     @classmethod
+    def expire_pending_claims(cls, queryset=None):
+        """
+        Safely sweeps and updates pending claims whose pickup_deadline has passed.
+        If any affected listing was marked STATUS_CLAIMED and still has available time
+        and remaining quantity, restores its status to STATUS_AVAILABLE.
+        """
+        from claims.models import Claim
+        from listings.models import FoodListing
+
+        now = timezone.now()
+        base_qs = queryset if queryset is not None else Claim.objects.all()
+        expired_claims = base_qs.filter(
+            status=Claim.STATUS_PENDING,
+            pickup_deadline__lte=now
+        ).select_related('listing')
+
+        expired_count = 0
+        affected_listing_ids = set()
+
+        with transaction.atomic():
+            for claim in expired_claims.select_for_update():
+                claim.status = Claim.STATUS_EXPIRED
+                claim.save(update_fields=['status'])
+                expired_count += 1
+                affected_listing_ids.add(claim.listing_id)
+
+            if affected_listing_ids:
+                listings = FoodListing.objects.filter(
+                    id__in=affected_listing_ids,
+                    status=FoodListing.STATUS_CLAIMED,
+                    expires_at__gt=now
+                ).select_for_update()
+
+                for listing in listings:
+                    if listing.quantity_available > Decimal('0.00'):
+                        listing.status = FoodListing.STATUS_AVAILABLE
+                        listing.save(update_fields=['status', 'updated_at'])
+
+        return expired_count
+
+    @classmethod
     def verify_and_complete_pickup(cls, pickup_code: str, donor_user):
         """
         Verifies the 8-character pickup code submitted by a Donor and completes the pickup.
+        Scopes lookup directly to donor's listings to eliminate oracle code enumeration leaks.
         """
         from claims.models import Claim
         from listings.models import FoodListing
@@ -156,22 +198,23 @@ class ClaimService:
             raise ValidationError("Please provide a valid 8-character pickup code.")
 
         with transaction.atomic():
-            try:
-                claim = Claim.objects.select_for_update().select_related('listing__donor__user', 'recipient__user').get(
-                    pickup_code=cleaned_code
-                )
-            except Claim.DoesNotExist:
-                raise ValidationError("Invalid pickup code. No matching claim found.")
+            # SEC-03: Scope directly to donor ownership unless staff to prevent cross-donor code probing
+            lookup = {'pickup_code': cleaned_code}
+            if not getattr(donor_user, 'is_staff', False):
+                lookup['listing__donor__user'] = donor_user
 
-            # Check donor ownership
-            if claim.listing.donor.user != donor_user and not donor_user.is_staff:
-                raise ValidationError("Unauthorized: You are not the donor for this food listing.")
+            try:
+                claim = Claim.objects.select_for_update().select_related(
+                    'listing__donor__user', 'recipient__user'
+                ).get(**lookup)
+            except Claim.DoesNotExist:
+                raise ValidationError("Invalid pickup code. Please check the code provided by the recipient and try again.")
 
             if claim.status == Claim.STATUS_COMPLETED:
                 raise ValidationError("This pickup code has already been verified and completed.")
 
-            if claim.status in [Claim.STATUS_CANCELLED, Claim.STATUS_EXPIRED]:
-                raise ValidationError(f"Cannot complete pickup for a claim that is {claim.get_status_display().lower()}.")
+            if claim.status == Claim.STATUS_CANCELLED:
+                raise ValidationError("Cannot complete pickup for a claim that has been cancelled.")
 
             is_expired = claim.is_expired
             if not is_expired:
@@ -187,8 +230,15 @@ class ClaimService:
                     listing.save(update_fields=['status', 'updated_at'])
 
         if is_expired:
-            Claim.objects.filter(pk=claim.pk).update(status=Claim.STATUS_EXPIRED)
-            claim.status = Claim.STATUS_EXPIRED
+            with transaction.atomic():
+                Claim.objects.filter(pk=claim.pk).update(status=Claim.STATUS_EXPIRED)
+                claim.status = Claim.STATUS_EXPIRED
+                # BUG-02: If listing was locked in STATUS_CLAIMED, restore to STATUS_AVAILABLE if unexpired and quantity remains
+                listing = claim.listing
+                if listing.status == FoodListing.STATUS_CLAIMED and listing.expires_at > timezone.now():
+                    if listing.quantity_available > Decimal('0.00'):
+                        listing.status = FoodListing.STATUS_AVAILABLE
+                        listing.save(update_fields=['status', 'updated_at'])
             raise ValidationError("This claim has expired and can no longer be picked up.")
 
         NotificationService.notify_pickup_completed(claim)

@@ -1,14 +1,13 @@
-<div class="card {% if listing.status == 'expired' or listing.is_expired %}card-expired{% endif %}">
-
-        {% with cover=listing.photos.all|first %}
+<div class="card listing-card {% if listing.status == 'expired' or listing.is_expired %}card-expired{% endif %}">
+    {% with cover=listing.photos.all|first %}
         {% if cover %}
             <img src="{{ cover.image.url }}"
                  alt="{{ listing.food_name }}"
                  class="food-card-photo"
                  loading="lazy">
         {% else %}
-            <div class="food-photo-placeholder food-card-photo">
-                No photo added
+            <div class="food-photo-placeholder food-card-photo" aria-label="No photograph provided">
+                <span>🍲 No Photo Provided</span>
             </div>
         {% endif %}
     {% endwith %}
@@ -16,32 +15,31 @@
     <div class="card-header">
         <div>
             <h3 class="card-title">{{ listing.food_name }}</h3>
-            <span class="card-subtitle">by {{ listing.donor.user.full_name }}</span>
+            <span class="card-subtitle">by {{ listing.donor.user.full_name|default:listing.donor.user.username }}</span>
         </div>
         <div>
-            <!-- Status Badge -->
             <span class="badge badge-{{ listing.status }}">{{ listing.get_status_display }}</span>
         </div>
     </div>
 
     <div class="card-body">
-        <p style="font-size: 0.95rem; color: var(--grey-700); margin-bottom: 0.75rem;">
-            {{ listing.description|default:"No special description provided."|truncatechars:100 }}
+        <p style="font-size: 0.9375rem; color: var(--color-ink-700); margin-bottom: 0.85rem; line-height: 1.5;">
+            {{ listing.description|default:"No special notes provided."|truncatechars:95 }}
         </p>
 
         <div class="food-meta">
             <div class="food-meta-item">
-                <span>📦</span>
+                <span aria-hidden="true">📦</span>
                 <span><strong>{{ listing.quantity_available|floatformat:2 }}</strong> of {{ listing.quantity|floatformat:2 }} {{ listing.unit }} available</span>
             </div>
             <div class="food-meta-item">
-                <span>📍</span>
+                <span aria-hidden="true">📍</span>
                 <span>{{ listing.location.area }}, {{ listing.location.city }}</span>
             </div>
             <div class="food-meta-item">
-                <span>⏳</span>
-                <span class="countdown" data-expires="{{ listing.expires_at|date:'c' }}">
-                    Calculating...
+                <span aria-hidden="true">⏰</span>
+                <span>
+                    Expires: <span class="countdown" data-expires="{{ listing.expires_at|date:'c' }}">Calculating...</span>
                 </span>
             </div>
         </div>
@@ -53,9 +51,15 @@
                 Manage & View Claims &rarr;
             </a>
         {% else %}
-            <a href="{% url 'listings:food_detail' pk=listing.pk %}" class="btn btn-primary btn-sm btn-claim" style="width: 100%;">
-                View Food & Claim &rarr;
-            </a>
+            {% if listing.is_expired or listing.status == 'expired' %}
+                <button type="button" class="btn btn-secondary btn-sm" style="width: 100%; opacity: 0.6;" disabled>
+                    Expired & Unavailable
+                </button>
+            {% else %}
+                <a href="{% url 'listings:food_detail' pk=listing.pk %}" class="btn btn-primary btn-sm btn-claim" style="width: 100%;">
+                    View Details & Reserve &rarr;
+                </a>
+            {% endif %}
         {% endif %}
     </div>
 </div>

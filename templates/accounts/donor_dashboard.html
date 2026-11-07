@@ -1,144 +1,162 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block title %}Donor Dashboard — FoodFlow{% endblock %}
 
 {% block content %}
-<!-- Donor welcome banner -->
-<div style="
-    margin-bottom: 2rem;
-    padding: clamp(1.5rem, 4vw, 2.75rem);
-    border-radius: 22px;
-    background: #173f35;
-">
+<!-- Dashboard Welcome Banner -->
+<div class="dashboard-banner">
+    <div class="dashboard-banner-content">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <span class="section-eyebrow" style="color: var(--color-primary-200);">DONOR WORKSPACE</span>
+                <h1 style="color: #ffffff; font-size: clamp(1.75rem, 3.5vw, 2.5rem); font-weight: 800; line-height: 1.2; margin-bottom: 0.5rem;">
+                    Welcome back, {{ request.user.full_name|default:request.user.username }}
+                </h1>
+                <p style="color: #d1fae5; font-size: 1rem; max-width: 650px; line-height: 1.6; margin: 0;">
+                    Manage your food donations, monitor incoming recipient reservations, and verify in-person handovers.
+                </p>
+            </div>
 
-    <p style="
-        margin: 0 0 0.8rem;
-        color: #bedcc5;
-        font-size: 0.75rem;
-        font-weight: 700;
-        letter-spacing: 2px;
-    ">
-        DONOR DASHBOARD
-    </p>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+                {% if donor.is_verified %}
+                    <span class="badge badge-available" style="padding: 0.4rem 0.85rem; font-size: 0.8125rem;">
+                        ✓ Verified Food Donor
+                    </span>
+                {% else %}
+                    <span class="badge badge-pending" style="padding: 0.4rem 0.85rem; font-size: 0.8125rem;">
+                        ⏳ Pending Admin Verification
+                    </span>
+                {% endif %}
+            </div>
+        </div>
 
-    <h1 style="
-        margin: 0 0 1rem;
-        color: #ffffff;
-        font-size: clamp(1.8rem, 3.5vw, 2.8rem);
-        font-weight: 700;
-        line-height: 1.2;
-        overflow-wrap: anywhere;
-    ">
-        Welcome, {{ request.user.full_name }}
-    </h1>
-
-    <p style="
-        max-width: 800px;
-        margin: 0;
-        color: #dce9df;
-        font-size: 1rem;
-        line-height: 1.85;
-    ">
-        Share your surplus food, manage your donation listings,
-        and verify recipient pickups. Your thoughtful
-        contributions can help reduce waste and support
-        your community.
-    </p>
-
-    <div style="margin-top: 1.25rem;">
-        {% if donor.is_verified %}
-            <span style="
-                display: inline-block;
-                padding: 0.35rem 0.8rem;
-                border: 1px solid #91be9f;
-                border-radius: 30px;
-                background: #254f3f;
-                color: #e3f4dd;
-                font-size: 0.8rem;
-                font-weight: 600;
-            ">
-                ✓ Verified Donor
-            </span>
-        {% else %}
-            <span style="
-                display: inline-block;
-                padding: 0.35rem 0.8rem;
-                border: 1px solid #d9bd78;
-                border-radius: 30px;
-                background: #50462d;
-                color: #fff0c2;
-                font-size: 0.8rem;
-                font-weight: 600;
-            ">
-                Verification Pending
-            </span>
-        {% endif %}
+        <!-- Quick Actions Toolbar -->
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid rgba(255, 255, 255, 0.12);">
+            <a href="{% url 'listings:donor_listing_create' %}" class="btn btn-primary btn-sm" style="background-color: var(--color-primary-600); border-color: var(--color-primary-600);">
+                + Post Food Donation
+            </a>
+            <a href="{% url 'claims:verify_pickup' %}" class="btn btn-secondary btn-sm">
+                🔑 Verify Recipient Pickup Code
+            </a>
+            <a href="{% url 'listings:donor_listings' %}" class="btn btn-outline btn-sm" style="color: #ffffff !important; border-color: rgba(255, 255, 255, 0.4);">
+                My Active Listings
+            </a>
+        </div>
     </div>
-
 </div>
 
 <!-- Metrics Overview -->
 <div class="grid grid-4" style="margin-bottom: 2.5rem;">
     <div class="stat-card">
         <span class="stat-value">{{ available_count }}</span>
-        <span class="stat-label">Available Donations</span>
+        <span class="stat-label">Available Now</span>
     </div>
     <div class="stat-card">
-        <span class="stat-value">{{ claimed_count }}</span>
-        <span class="stat-label">Pending Claim Pickups</span>
+        <span class="stat-value" style="color: var(--color-accent-700);">{{ claimed_count }}</span>
+        <span class="stat-label">Pending Pickups</span>
     </div>
     <div class="stat-card">
-        <span class="stat-value">{{ completed_count }}</span>
+        <span class="stat-value" style="color: var(--color-primary-700);">{{ completed_count }}</span>
         <span class="stat-label">Completed Rescues</span>
     </div>
     <div class="stat-card">
-        <span class="stat-value">{{ total_listings }}</span>
+        <span class="stat-value" style="color: var(--color-ink-700);">{{ total_listings }}</span>
         <span class="stat-label">Total Listings</span>
     </div>
 </div>
 
-<!-- Pending Pickups Alert / List -->
+<!-- Pending Pickups Alert / Handover Table -->
 {% if pending_pickups %}
-<div class="card" style="margin-bottom: 2.5rem; border-left: 4px solid var(--amber-600);">
+<div class="card" style="margin-bottom: 2.5rem; border-left: 4px solid var(--color-accent-600);">
     <div class="card-header">
-        <h3 class="card-title" style="color: var(--amber-600);">⚠️ Pending Handover / Pickups Awaiting Verification</h3>
-        <a href="{% url 'claims:verify_pickup' %}" class="btn btn-outline btn-sm">Verify Pickup &rarr;</a>
+        <div>
+            <h2 class="card-title" style="color: var(--color-accent-800); font-size: 1.25rem;">
+                ⚠️ Pending Handovers Awaiting Verification
+            </h2>
+            <span class="card-subtitle">Recipients will present their 8-character token during pickup.</span>
+        </div>
+        <a href="{% url 'claims:verify_pickup' %}" class="btn btn-primary btn-sm">
+            Verify Token &rarr;
+        </a>
     </div>
-    <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.95rem;">
+
+    <!-- Desktop/Tablet Table -->
+    <div class="hide-mobile" style="overflow-x: auto; margin-top: 1rem; -webkit-overflow-scrolling: touch;">
+        <table style="width: 100%; min-width: 620px; border-collapse: collapse; font-size: 0.9375rem;">
             <thead>
-                <tr style="text-align: left; border-bottom: 2px solid var(--grey-200); color: var(--grey-700);">
-                    <th style="padding: 0.75rem 0.5rem;">Food Item</th>
-                    <th style="padding: 0.75rem 0.5rem;">Reserved Qty</th>
-                    <th style="padding: 0.75rem 0.5rem;">Recipient</th>
-                    <th style="padding: 0.75rem 0.5rem;">Pickup Deadline</th>
-                    <th style="padding: 0.75rem 0.5rem;">Action</th>
+                <tr style="text-align: left; border-bottom: 2px solid var(--color-border-main); color: var(--color-ink-600); background-color: var(--color-bg-subtle);">
+                    <th style="padding: 0.85rem 0.75rem;">Food Item</th>
+                    <th style="padding: 0.85rem 0.75rem;">Reserved Qty</th>
+                    <th style="padding: 0.85rem 0.75rem;">Recipient</th>
+                    <th style="padding: 0.85rem 0.75rem;">Pickup Deadline</th>
+                    <th style="padding: 0.85rem 0.75rem; text-align: right;">Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for claim in pending_pickups %}
-                <tr style="border-bottom: 1px solid var(--grey-200);">
-                    <td style="padding: 0.75rem 0.5rem; font-weight: 600;">{{ claim.listing.food_name }}</td>
-                    <td style="padding: 0.75rem 0.5rem;">{{ claim.claimed_quantity|floatformat:2 }} {{ claim.listing.unit }}</td>
-                    <td style="padding: 0.75rem 0.5rem;">{{ claim.recipient.user.full_name|default:claim.recipient.user.username }}</td>
-                    <td style="padding: 0.75rem 0.5rem; color: var(--red-600); font-weight: 600;">
+                <tr style="border-bottom: 1px solid var(--color-border-subtle);">
+                    <td style="padding: 0.85rem 0.75rem; font-weight: 600; color: var(--color-ink-900);">
+                        {{ claim.listing.food_name }}
+                    </td>
+                    <td style="padding: 0.85rem 0.75rem;">
+                        {{ claim.claimed_quantity|floatformat:2 }} {{ claim.listing.unit }}
+                    </td>
+                    <td style="padding: 0.85rem 0.75rem;">
+                        {{ claim.recipient.user.full_name|default:claim.recipient.user.username }}
+                        <span style="display: block; font-size: 0.8125rem; color: var(--color-ink-500);">
+                            {{ claim.recipient.get_recipient_type_display }}
+                        </span>
+                    </td>
+                    <td style="padding: 0.85rem 0.75rem; color: var(--color-danger-text); font-weight: 600;">
                         {{ claim.pickup_deadline|date:"M d, h:i A" }}
                     </td>
-                    <td style="padding: 0.75rem 0.5rem;">
-                        <a href="{% url 'claims:verify_pickup' %}" class="btn btn-outline btn-sm">Verify Code</a>
+                    <td style="padding: 0.85rem 0.75rem; text-align: right;">
+                        <a href="{% url 'claims:verify_pickup' %}" class="btn btn-outline btn-sm">
+                            Verify Code
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    <!-- Mobile Stacked Card View (<= 640px) -->
+    <div class="show-mobile-only" style="margin-top: 1rem; flex-direction: column; gap: 0.85rem;">
+        {% for claim in pending_pickups %}
+        <div style="background: var(--color-bg-subtle); border: 1px solid var(--color-border-main); border-radius: var(--radius-md); padding: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem;">
+                <strong style="color: var(--color-ink-900); font-size: 1rem;">{{ claim.listing.food_name }}</strong>
+                <span class="badge badge-pending" style="font-size: 0.75rem;">Pending</span>
+            </div>
+            <div style="font-size: 0.875rem; color: var(--color-ink-700); line-height: 1.6; margin-bottom: 0.75rem;">
+                <div>Reserved: <strong>{{ claim.claimed_quantity|floatformat:2 }} {{ claim.listing.unit }}</strong></div>
+                <div>Recipient: <strong>{{ claim.recipient.user.full_name|default:claim.recipient.user.username }}</strong> ({{ claim.recipient.get_recipient_type_display }})</div>
+                <div style="color: var(--color-danger-text); font-weight: 600; margin-top: 0.25rem;">
+                    ⏰ Deadline: {{ claim.pickup_deadline|date:"M d, h:i A" }}
+                </div>
+            </div>
+            <a href="{% url 'claims:verify_pickup' %}" class="btn btn-primary btn-sm" style="width: 100%;">
+                Verify Pickup Code &rarr;
+            </a>
+        </div>
+        {% endfor %}
+    </div>
 </div>
 {% endif %}
 
-<!-- Recent Listings -->
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-    <h2 style="font-size: 1.5rem; color: var(--ink);">My Recent Food Listings</h2>
-    <a href="{% url 'listings:donor_listings' %}" class="btn btn-outline btn-sm">View All Listings &rarr;</a>
+<!-- Recent Listings Section -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--color-ink-900); margin: 0;">
+            My Recent Food Listings
+        </h2>
+        <span style="color: var(--color-ink-500); font-size: 0.875rem;">Active and recent donations created by your profile.</span>
+    </div>
+    <a href="{% url 'listings:donor_listings' %}" class="btn btn-secondary btn-sm">
+        View All Listings &rarr;
+    </a>
 </div>
 
 {% if recent_listings %}
@@ -148,9 +166,17 @@
     {% endfor %}
 </div>
 {% else %}
-<div class="card" style="text-align: center; padding: 3rem;">
-    <p style="color: var(--grey-500); font-size: 1.1rem; margin-bottom: 1.5rem;">You have not posted any food donations yet.</p>
-    <a href="{% url 'listings:donor_listing_create' %}" class="btn btn-primary">+ Post Your First Donation</a>
+<div class="card" style="text-align: center; padding: 3.5rem 1.5rem;">
+    <div style="font-size: 2.5rem; margin-bottom: 0.75rem;" aria-hidden="true">🍲</div>
+    <h3 style="color: var(--color-ink-900); margin-bottom: 0.5rem; font-size: 1.25rem;">No Food Donations Posted Yet</h3>
+    <p style="color: var(--color-ink-500); max-width: 480px; margin: 0 auto 1.5rem; line-height: 1.6;">
+        Have leftover prepared meals, pantry surplus, or bakery goods? Post them now before they expire.
+    </p>
+    <div>
+        <a href="{% url 'listings:donor_listing_create' %}" class="btn btn-primary">
+            + Post Your First Donation
+        </a>
+    </div>
 </div>
 {% endif %}
 {% endblock %}

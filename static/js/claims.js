@@ -47,4 +47,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // UX-01: Re-enable submit button if restored from BFcache or back-forward navigation
+    window.addEventListener('pageshow', () => {
+        if (claimForm) {
+            const submitBtn = claimForm.querySelector('button[type="submit"]');
+            if (submitBtn && submitBtn.disabled) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Confirm Reservation';
+            }
+        }
+    });
 });

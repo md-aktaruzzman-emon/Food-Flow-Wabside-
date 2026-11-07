@@ -1,34 +1,23 @@
-<footer class="footer"
-        style="
-            background: #174b36;
-            color: #e7f1e9;
-            border-top: 1px solid #286247;
-            padding: 1.5rem 0;
-        ">
-
-    <div class="container footer-content"
-         style="
-             max-width: none;
-             padding-left: 20px;
-             padding-right: 20px;
-             display: flex;
-             justify-content: space-between;
-             align-items: center;
-             flex-wrap: wrap;
-             gap: 0.75rem;
-             color: #e7f1e9;
-         ">
-
+{% load static %}
+<footer class="footer" role="contentinfo">
+    <div class="container footer-content">
         <div>
-            <strong style="color: #ffffff;">FoodFlow</strong>
-            &copy; {% now "Y" %} — Expiry-Aware Food Donation Platform.
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <img src="{% static 'images/logo.svg' %}" alt="" width="28" height="28" aria-hidden="true" style="border-radius: 6px;">
+                <strong style="color: #ffffff; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em;">FoodFlow</strong>
+            </div>
+            <p style="color: #c4d4cc; font-size: 0.875rem; max-width: 480px; margin: 0; line-height: 1.6;">
+                Bridging surplus food to local shelters, charities, and families in need — before it expires. Expiry-aware, safe, and community-driven.
+            </p>
         </div>
 
-        <div>
-            <span style="color: #d2e6d7;">
+        <div style="display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.875rem; text-align: right;">
+            <div style="color: #c4e4d4; font-weight: 600;">
                 Safe &bull; Verified &bull; Expiry-Tracked &bull; Zero Waste
-            </span>
+            </div>
+            <div style="color: #9cb3a7;">
+                &copy; {% now "Y" %} FoodFlow Platform. All rights reserved.
+            </div>
         </div>
-
     </div>
 </footer>

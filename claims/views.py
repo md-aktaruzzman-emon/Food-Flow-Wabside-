@@ -68,12 +68,8 @@ def claims_list_view(request):
     """
     status_filter = request.GET.get('status', '').strip().lower()
 
-    # Lazily update pending claims whose pickup deadline has passed
-    now = timezone.now()
-    Claim.objects.filter(
-        status=Claim.STATUS_PENDING,
-        pickup_deadline__lte=now
-    ).update(status=Claim.STATUS_EXPIRED)
+    # BUG-02: Safely expire pending claims and restore listing availability if applicable
+    ClaimService.expire_pending_claims()
 
     if request.user.is_recipient:
         recipient = getattr(request.user, 'recipient_profile', None)
@@ -177,7 +173,26 @@ def donor_verify_pickup_view(request):
     donor = request.user.donor_profile
     verified_claim = None
 
+    # SEC-03: Sliding-window rate limiter to protect against pickup code brute-force attacks
+    attempt_key = f'pickup_verify_attempts_{request.user.pk}'
+    now_ts = timezone.now().timestamp()
+    attempts = request.session.get(attempt_key, [])
+    # Keep attempts from the last 5 minutes (300 seconds)
+    recent_attempts = [ts for ts in attempts if now_ts - ts < 300]
+
     if request.method == 'POST':
+        if len(recent_attempts) >= 10:
+            messages.error(request, "Too many failed verification attempts. Please wait 5 minutes before trying again.")
+            recent_pickups = Claim.objects.filter(
+                listing__donor=donor,
+                status=Claim.STATUS_COMPLETED
+            ).select_related('listing', 'recipient__user').order_by('-claimed_at')[:10]
+            return render(request, 'claims/verify_pickup.html', {
+                'form': PickupVerificationForm(request.POST),
+                'verified_claim': None,
+                'recent_pickups': recent_pickups,
+            })
+
         form = PickupVerificationForm(request.POST)
         if form.is_valid():
             code = form.cleaned_data['pickup_code']
@@ -192,7 +207,11 @@ def donor_verify_pickup_view(request):
                     f"of '{verified_claim.listing.food_name}' to recipient '{verified_claim.recipient.user.full_name}' is complete."
                 )
                 form = PickupVerificationForm()
+                # Clear attempts on success
+                request.session[attempt_key] = []
             except ValidationError as e:
+                recent_attempts.append(now_ts)
+                request.session[attempt_key] = recent_attempts
                 err_msg = ', '.join(e.messages) if hasattr(e, 'messages') else str(e)
                 messages.error(request, f"Verification Failed: {err_msg}")
     else:

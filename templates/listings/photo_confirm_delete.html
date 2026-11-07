@@ -1,48 +1,44 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Delete Photo — FoodFlow{% endblock %}
 
 {% block content %}
-<div class="form-card" style="max-width: 600px;">
-
-    <h2 style="color: var(--red-600); text-align: center; margin-bottom: 0.75rem;">
-        Delete Food Photo?
-    </h2>
-
-    <p style="color: var(--grey-500); text-align: center; margin-bottom: 1.5rem;">
-        This photo will be removed from {{ listing.food_name }}.
-    </p>
+<div class="form-card" style="max-width: 580px;">
+    <div style="text-align: center; margin-bottom: 1.5rem;">
+        <span class="section-eyebrow" style="color: var(--color-danger-main);">CONFIRM DELETION</span>
+        <h1 style="color: var(--color-danger-text); font-size: 1.5rem; font-weight: 800; margin: 0.25rem 0 0.5rem;">
+            Delete Food Photo?
+        </h1>
+        <p style="color: var(--color-ink-600); font-size: 0.9375rem; margin: 0;">
+            This photo will be permanently removed from <strong>{{ listing.food_name }}</strong>.
+        </p>
+    </div>
 
     <img src="{{ photo.image.url }}"
          alt="{{ photo.caption|default:listing.food_name }}"
-         style="display: block; width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; margin-bottom: 1rem;">
+         style="display: block; width: 100%; max-height: 260px; object-fit: contain; border-radius: var(--radius-md); border: 1px solid var(--color-border-main); margin-bottom: 1.25rem; background: var(--color-bg-subtle);">
 
     {% if photo.caption %}
-        <p style="color: var(--grey-700); margin-bottom: 1rem; overflow-wrap: anywhere;">
-            {{ photo.caption }}
+        <p style="color: var(--color-ink-700); margin-bottom: 1rem; overflow-wrap: anywhere; text-align: center; font-style: italic;">
+            "{{ photo.caption }}"
         </p>
     {% endif %}
 
-    <p class="form-help" style="margin-bottom: 1.5rem;">
-        Your food listing will remain published. Only this photo will be deleted.
+    <p class="form-help" style="margin-bottom: 1.75rem; text-align: center;">
+        Your food listing will remain active and published. Only this image file will be removed.
     </p>
 
     <form method="post">
         {% csrf_token %}
-
         <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-            <button type="submit"
-                    class="btn btn-primary"
-                    style="background: var(--red-600); border-color: var(--red-600);">
+            <button type="submit" class="btn btn-danger btn-lg" style="flex: 2;">
                 Yes, Delete Photo
             </button>
-
-            <a href="{% url 'listings:donor_photo_list' listing_id=listing.pk %}"
-               class="btn btn-secondary">
+            <a href="{% url 'listings:donor_photo_list' listing_id=listing.pk %}" class="btn btn-secondary btn-lg" style="flex: 1;">
                 Cancel
             </a>
         </div>
     </form>
-
 </div>
 {% endblock %}

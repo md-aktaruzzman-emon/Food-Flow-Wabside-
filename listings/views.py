@@ -40,8 +40,8 @@ def donor_listings_list_view(request):
     ).update(status=FoodListing.STATUS_EXPIRED)
     
     listings = FoodListing.objects.filter(donor=donor).select_related(
-        'location'
-    ).prefetch_related('claims')
+        'donor__user', 'location'
+    ).prefetch_related('claims', 'photos')
 
     valid_statuses = [
         FoodListing.STATUS_AVAILABLE,
@@ -214,6 +214,15 @@ def donor_listing_delete_view(request, pk):
     if listing.donor.user != request.user and not request.user.is_staff:
         messages.error(request, "Unauthorized: You cannot delete this listing.")
         return redirect('listings:donor_listings')
+
+    # Security & Audit Protection: Prevent deletion if claims exist (pending or completed)
+    if listing.claims.filter(status__in=['pending', 'completed']).exists():
+        messages.error(
+            request,
+            "Cannot delete this listing because active or completed reservations exist. "
+            "Please fulfill or cancel the reservations first to preserve audit records."
+        )
+        return redirect('listings:donor_listing_detail', pk=listing.pk)
 
     food_title = listing.food_name
     listing.delete()
@@ -418,6 +427,9 @@ def donor_photo_delete_view(request, photo_id):
     listing = photo.listing
 
     if request.method == 'POST':
+        # Safely remove underlying image file from storage
+        if photo.image:
+            photo.image.delete(save=False)
         photo.delete()
 
         messages.success(

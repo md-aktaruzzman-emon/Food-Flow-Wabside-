@@ -49,7 +49,10 @@
                     <li><a href="{% url 'admin:index' %}" class="nav-link" target="_blank" rel="noopener">Admin Panel</a></li>
                 {% endif %}
                 <li>
-                    <a href="{% url 'accounts:logout' %}" class="btn btn-secondary btn-sm">Log Out</a>
+                    <form method="post" action="{% url 'accounts:logout' %}" style="display: inline; margin: 0; padding: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary btn-sm" style="cursor: pointer; width: 100%;">Log Out</button>
+                    </form>
                 </li>
             {% else %}
                 <!-- Guest / Public Navigation -->

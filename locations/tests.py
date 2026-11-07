@@ -44,3 +44,4 @@ class LocationMatchingServiceTests(TestCase):
         matches = LocationMatchingService.find_matching_recipients(loc_no_area)
         self.assertEqual(matches.count(), 6)
 
+

@@ -16,16 +16,52 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 IS_VERCEL = 'VERCEL' in os.environ or os.environ.get('VERCEL_ENV') is not None
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-foodflow-university-cse-lab-secret-key-2026')
+_secret_key = os.environ.get('SECRET_KEY')
+_insecure_default = 'django-insecure-foodflow-university-cse-lab-secret-key-2026'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-# Allow Vercel, localhost, and custom domains
-ALLOWED_HOSTS = ['*']
+if not _secret_key:
+    if DEBUG:
+        SECRET_KEY = _insecure_default
+    else:
+        raise ImproperlyConfigured(
+            "CRITICAL: The SECRET_KEY environment variable must be set in production and cannot be empty."
+        )
+else:
+    if not DEBUG and _secret_key == _insecure_default:
+        raise ImproperlyConfigured(
+            "CRITICAL: The known insecure default SECRET_KEY cannot be used in production. "
+            "Please provide a unique, cryptographically random SECRET_KEY in your environment."
+        )
+    SECRET_KEY = _secret_key
 
-# Security and CSRF settings for Vercel HTTPS reverse proxy
+# Allow Vercel, localhost, and custom domains
+allowed_hosts_env = os.environ.get('ALLOWED_HOSTS')
+if allowed_hosts_env:
+    ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_env.split(',') if h.strip()]
+elif DEBUG:
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = [
+        '.vercel.app',
+        'food-flow-web.vercel.app',
+        'localhost',
+        '127.0.0.1',
+    ]
+
+# Security and CSRF settings
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True').lower() in ('true', '1', 'yes')
+    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', 31536000))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_REFERRER_POLICY = 'same-origin'
 
 csrf_origins_env = os.environ.get('CSRF_TRUSTED_ORIGINS')
 if csrf_origins_env:
@@ -39,17 +75,17 @@ else:
     ]
 
 # Session and Cookie Configuration
-# Use cryptographically signed cookie sessions so user authentication persists across
-# Vercel serverless instances, cold starts, and container recycling without relying on local DB session tables.
-SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+# Default to database-backed sessions for maximum tamper-resistance and server-side revocation.
+SESSION_ENGINE = os.environ.get('DJANGO_SESSION_ENGINE', 'django.contrib.sessions.backends.db')
 SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SECURE = False  # Allows session cookies to work reliably across both HTTPS proxies and local HTTP
-CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = not DEBUG  # True in production HTTPS, False in local development
+CSRF_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = False  # Allows JS CSRF token reads if needed
 
 # Application definition
 INSTALLED_APPS = [
@@ -85,7 +121,6 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            os.path.join(BASE_DIR, 'templates'),
             BASE_DIR / 'templates',
         ],
         'APP_DIRS': True,
@@ -119,6 +154,10 @@ if database_url:
         )
     }
 elif IS_VERCEL:
+    if not DEBUG:
+        raise ImproperlyConfigured(
+            "Production deployment on Vercel requires DATABASE_URL to connect to a persistent database (e.g. PostgreSQL/Neon). Ephemeral SQLite in /tmp will lose all records between requests."
+        )
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -136,9 +175,22 @@ else:
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.User'
 
-# Password validation - empty list for beginner-friendly lab project
-# Only password == password_confirm is checked in registration form
-AUTH_PASSWORD_VALIDATORS = []
+# Password validation suite (OWASP / Django Standard)
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 8},
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
 
 # Internationalization and Timezone
 LANGUAGE_CODE = 'en-us'
@@ -164,9 +216,14 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 
-# Email backend for development (outputs to terminal console)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'no-reply@foodflow.local'
+# Email configuration (defaults to console output in development)
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'no-reply@foodflow.local')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'localhost')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 
 # FoodFlow specific business logic settings (simplified for lab project)
 FOODFLOW_SETTINGS = {
@@ -177,3 +234,4 @@ FOODFLOW_SETTINGS = {
 # Uploaded food photos
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+SERVE_MEDIA_IN_PROD = os.environ.get('SERVE_MEDIA_IN_PROD', 'False').lower() in ('true', '1')

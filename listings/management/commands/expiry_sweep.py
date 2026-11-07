@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.db import transaction
 from listings.models import FoodListing
 from claims.models import Claim
+from claims.services import ClaimService
 from notifications.services import NotificationService
 
 logger = logging.getLogger(__name__)
@@ -41,29 +42,11 @@ class Command(BaseCommand):
             except Exception as e:
                 self.stderr.write(self.style.ERROR(f"Error processing expired listing #{listing.id}: {e}"))
 
-        # 2. Sweep pending claims past their pickup deadline
-        expired_claims = Claim.objects.filter(
-            status=Claim.STATUS_PENDING,
-            pickup_deadline__lte=now
-        ).select_related('listing')
-
-        for claim in expired_claims:
-            try:
-                with transaction.atomic():
-                    claim.status = Claim.STATUS_EXPIRED
-                    claim.save(update_fields=['status'])
-
-                    # If listing was marked claimed but still unexpired, restore to available if quantity remains
-                    listing = claim.listing
-                    if listing.status == FoodListing.STATUS_CLAIMED and listing.expires_at > now:
-                        from decimal import Decimal
-                        if listing.quantity_available > Decimal('0.00'):
-                            listing.status = FoodListing.STATUS_AVAILABLE
-                            listing.save(update_fields=['status', 'updated_at'])
-
-                    expired_claims_count += 1
-            except Exception as e:
-                self.stderr.write(self.style.ERROR(f"Error expiring claim #{claim.id}: {e}"))
+        # 2. Sweep pending claims past their pickup deadline using centralized ClaimService
+        try:
+            expired_claims_count = ClaimService.expire_pending_claims()
+        except Exception as e:
+            self.stderr.write(self.style.ERROR(f"Error expiring claims: {e}"))
 
         self.stdout.write(self.style.SUCCESS(
             f"Expiry sweep completed successfully:\n"

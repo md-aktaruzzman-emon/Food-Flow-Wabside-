@@ -7,18 +7,23 @@ from .models import FoodListing, FoodPhoto
 from django.core.validators import FileExtensionValidator
 
 def validate_food_image(image):
+    if not image:
+        return
     if image.size > 5 * 1024 * 1024:
-        raise forms.ValidationError(
-            "Image size must not exceed 5 MB."
-        )
+        raise forms.ValidationError("Image size must not exceed 5 MB.")
 
-    uploaded_image = getattr(image, 'image', None)
-
-    if uploaded_image is not None:
-        if uploaded_image.format not in ['JPEG', 'PNG', 'WEBP']:
-            raise forms.ValidationError(
-                "Only JPG, PNG and WebP images are allowed."
-            )
+    try:
+        from PIL import Image
+        image.seek(0)
+        img = Image.open(image)
+        img.verify()
+        if img.format not in ['JPEG', 'PNG', 'WEBP']:
+            raise forms.ValidationError("Only JPG, PNG and WebP images are allowed.")
+        image.seek(0)
+    except forms.ValidationError:
+        raise
+    except Exception:
+        raise forms.ValidationError("Uploaded file is not a valid image.")
 
 class FoodListingForm(forms.ModelForm):
     """

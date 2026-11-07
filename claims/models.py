@@ -22,12 +22,12 @@ class Claim(models.Model):
 
     listing = models.ForeignKey(
         'listings.FoodListing',
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='claims'
     )
     recipient = models.ForeignKey(
         'accounts.Recipient',
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name='claims'
     )
     claimed_quantity = models.DecimalField(
@@ -38,6 +38,7 @@ class Claim(models.Model):
     )
     claimed_at = models.DateTimeField(auto_now_add=True)
     pickup_deadline = models.DateTimeField(
+        db_index=True,
         help_text="Time window by which food must be picked up"
     )
     pickup_code = models.CharField(
@@ -49,13 +50,18 @@ class Claim(models.Model):
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
-        default=STATUS_PENDING
+        default=STATUS_PENDING,
+        db_index=True
     )
 
     class Meta:
         verbose_name = "Claim"
         verbose_name_plural = "Claims"
         ordering = ['-claimed_at']
+        indexes = [
+            models.Index(fields=['status', 'pickup_deadline'], name='claim_stat_deadline_idx'),
+            models.Index(fields=['status'], name='claim_status_idx'),
+        ]
 
     def __str__(self):
         return f"Claim #{self.id} - {self.listing.food_name} ({self.claimed_quantity} {self.listing.unit}) by {self.recipient.user.username}"

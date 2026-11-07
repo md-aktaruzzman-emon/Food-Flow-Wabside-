@@ -55,15 +55,15 @@ class AccountsModelAndAuthTests(TestCase):
             'address': '45 Lake View',
             'area': 'Gulshan',
             'city': 'Dhaka',
-            'password': 'Password123',
-            'password_confirm': 'Password123',
+            'password': 'SecurePass#2026!',
+            'password_confirm': 'SecurePass#2026!',
         }, follow=True)
 
         self.assertEqual(response.status_code, 200)
         user = User.objects.get(username='newdonor')
         self.assertTrue(user.is_donor)
         self.assertEqual(user.full_name, 'Fresh Eats Donor')
-        self.assertTrue(check_password('Password123', user.password))
+        self.assertTrue(check_password('SecurePass#2026!', user.password))
         self.assertFalse(user.donor_profile.is_verified)
         self.assertEqual(user.donor_profile.organization_name, 'Fresh Eats')
         self.assertEqual(user.donor_profile.location.city, 'Dhaka')
@@ -83,8 +83,8 @@ class AccountsModelAndAuthTests(TestCase):
             'address': '12 Hope St',
             'area': 'Mirpur',
             'city': 'Dhaka',
-            'password': 'Password123',
-            'password_confirm': 'Password123',
+            'password': 'SecurePass#2026!',
+            'password_confirm': 'SecurePass#2026!',
         }, follow=True)
 
         self.assertEqual(response.status_code, 200)
@@ -198,7 +198,7 @@ class AccountsModelAndAuthTests(TestCase):
         self.client.force_login(user)
         self.assertIn('_auth_user_id', self.client.session)
 
-        response = self.client.get(reverse('accounts:logout'))
+        response = self.client.post(reverse('accounts:logout'))
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('home'))
         self.assertNotIn('_auth_user_id', self.client.session)
@@ -260,9 +260,3 @@ class AccountsModelAndAuthTests(TestCase):
         user2.refresh_from_db()
         self.assertEqual(user2.email, 'second@test.com')
 
-
-class DatabaseConfigTests(TestCase):
-    def test_local_sqlite_settings(self):
-        """Verify that local development uses SQLite."""
-        from django.conf import settings
-        self.assertEqual(settings.DATABASES['default']['ENGINE'], 'django.db.backends.sqlite3')

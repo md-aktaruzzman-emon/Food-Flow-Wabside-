@@ -251,3 +251,4 @@ class ClaimsServiceAndWorkflowTests(TestCase):
 
         c3 = ClaimService.create_claim(listing_id=self.listing.id, recipient=self.recipient, quantity="2.5")
         self.assertEqual(c3.claimed_quantity, Decimal("2.50"))
+

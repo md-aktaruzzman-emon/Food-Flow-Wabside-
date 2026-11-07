@@ -44,6 +44,9 @@ class Notification(models.Model):
         verbose_name = "Notification"
         verbose_name_plural = "Notifications"
         ordering = ['-sent_at']
+        indexes = [
+            models.Index(fields=['recipient', 'is_read'], name='notif_recip_read_idx'),
+        ]
 
     def __str__(self):
         return f"[{self.get_notification_type_display()}] {self.title} to {self.recipient.user.username}"

@@ -35,11 +35,13 @@ class Location(models.Model):
     def get_or_create_location(cls, address, area, city):
         """
         Safely retrieves or creates a Location instance based on address, area, and city.
-        Normalizes strings to avoid duplicate entries.
+        Normalizes strings to avoid duplicate entries and handles concurrent creation atomically.
         """
+        from django.db import IntegrityError, transaction
+
         clean_addr = (address or '').strip()
-        clean_area = (area or '').strip()
-        clean_city = (city or '').strip()
+        clean_area = (area or '').strip().title() if area else ''
+        clean_city = (city or '').strip().title() if city else ''
 
         loc = cls.objects.filter(
             address__iexact=clean_addr,
@@ -47,10 +49,21 @@ class Location(models.Model):
             city__iexact=clean_city
         ).first()
 
-        if not loc:
-            loc = cls.objects.create(
-                address=clean_addr,
-                area=clean_area,
-                city=clean_city
-            )
-        return loc
+        if loc:
+            return loc
+
+        try:
+            with transaction.atomic():
+                loc, _ = cls.objects.get_or_create(
+                    address=clean_addr,
+                    area=clean_area,
+                    city=clean_city
+                )
+                return loc
+        except IntegrityError:
+            # Handles concurrent insert race conditions safely
+            return cls.objects.filter(
+                address__iexact=clean_addr,
+                area__iexact=clean_area,
+                city__iexact=clean_city
+            ).first()

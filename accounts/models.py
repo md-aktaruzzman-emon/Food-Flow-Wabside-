@@ -1,5 +1,15 @@
+import os
+import uuid
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+
+def user_avatar_path(instance, filename):
+    """
+    Generates a secure, randomized UUID-based upload path for user avatars,
+    preventing file collisions and directory traversal.
+    """
+    ext = os.path.splitext(filename)[1].lower()
+    return f"profile_pictures/{uuid.uuid4().hex}{ext}"
 
 class User(AbstractUser):
     """
@@ -33,7 +43,7 @@ class User(AbstractUser):
     )
 
     profile_picture = models.ImageField(
-        upload_to='profile_pictures/',
+        upload_to=user_avatar_path,
         blank=True,
         null=True
     )

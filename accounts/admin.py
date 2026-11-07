@@ -9,10 +9,10 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ('role', 'is_staff', 'is_active')
     search_fields = ('username', 'full_name', 'email', 'phone')
     fieldsets = BaseUserAdmin.fieldsets + (
-        ('FoodFlow Role & Info', {'fields': ('full_name', 'role', 'phone')}),
+        ('FoodFlow Role & Info', {'fields': ('full_name', 'role', 'phone', 'profile_picture')}),
     )
     add_fieldsets = BaseUserAdmin.add_fieldsets + (
-        ('FoodFlow Role & Info', {'fields': ('full_name', 'role', 'phone')}),
+        ('FoodFlow Role & Info', {'fields': ('full_name', 'role', 'phone', 'profile_picture')}),
     )
 
 

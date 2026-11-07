@@ -1,3 +1,4 @@
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
@@ -9,9 +10,12 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from locations.models import Location
 from listings.models import FoodListing
 from claims.models import Claim
+from claims.services import ClaimService
 from .models import User, Donor, Recipient
 from .forms import UserRegistrationForm, UserLoginForm, ProfileUpdateForm, ProfilePictureForm
 from django.views.decorators.http import require_POST
+
+logger = logging.getLogger(__name__)
 
 def get_dashboard_redirect(user):
     """
@@ -106,7 +110,8 @@ def register_view(request):
                     return get_dashboard_redirect(user)
 
             except Exception as e:
-                messages.error(request, f"Registration failed due to a server error: {e}")
+                logger.exception(f"Registration failure: {e}")
+                messages.error(request, "Registration could not be completed due to a temporary server error. Please try again.")
         else:
             messages.error(request, "Please correct the errors in the form below.")
     else:
@@ -144,10 +149,11 @@ def login_view(request):
     return render(request, 'accounts/login.html', {'form': form})
 
 
+@require_POST
 def logout_view(request):
     """
     Logs out the current authenticated user and redirects to home.
-    Supports both GET and POST requests.
+    Strictly requires POST request with CSRF protection (SEC-04).
     """
     if request.user.is_authenticated:
         logout(request)
@@ -235,13 +241,13 @@ def donor_dashboard_view(request):
         status__in=[FoodListing.STATUS_AVAILABLE, FoodListing.STATUS_CLAIMED]
     ).update(status=FoodListing.STATUS_EXPIRED)
 
-    # Lazily update pending claims whose pickup deadline has passed
-    Claim.objects.filter(
-        status=Claim.STATUS_PENDING,
-        pickup_deadline__lte=now
-    ).update(status=Claim.STATUS_EXPIRED)
+    # BUG-02: Safely expire pending claims and restore listing availability if applicable
+    ClaimService.expire_pending_claims()
 
-    listings = donor.listings.all().select_related('location')
+    # PERF-03: Prefetch photos and annotate available quantity to avoid N+1 queries when displaying listing cards
+    listings = FoodListing.with_annotated_quantities(
+        donor.listings.all().select_related('location').prefetch_related('photos')
+    )
 
     total_listings = listings.count()
     available_count = listings.filter(status=FoodListing.STATUS_AVAILABLE, expires_at__gt=now).count()
@@ -285,19 +291,16 @@ def recipient_dashboard_view(request):
         messages.error(request, "Recipient profile not found. Please complete your registration.")
         return redirect('accounts:profile')
     
-    # Lazily update pending claims whose pickup deadline has passed
+    # BUG-02: Safely expire pending claims and restore listing availability if applicable
+    ClaimService.expire_pending_claims()
     now = timezone.now()
-    Claim.objects.filter(
-        status=Claim.STATUS_PENDING,
-        pickup_deadline__lte=now
-    ).update(status=Claim.STATUS_EXPIRED)
 
     # Query visible food in recipient's city/area
     available_food = FoodListing.visible_to_recipients()
     nearby_food_count = available_food.filter(location__city__iexact=recipient.location.city).count()
     total_available_count = available_food.count()
 
-    user_claims = recipient.claims.all().select_related('listing', 'listing__donor')
+    user_claims = recipient.claims.all().select_related('listing__donor__user', 'listing__location')
     pending_claims = user_claims.filter(status=Claim.STATUS_PENDING)
     completed_claims = user_claims.filter(status=Claim.STATUS_COMPLETED)
 

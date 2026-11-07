@@ -1,126 +1,147 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}{% if is_edit %}Edit Food Donation{% else %}Post Food Donation{% endif %} — FoodFlow{% endblock %}
 
 {% block content %}
-<div class="form-card" style="max-width: 650px;">
-    <h2 style="color: var(--green-700); margin-bottom: 0.5rem; text-align: center;">
-        {% if is_edit %}Edit Donation Listing{% else %}Donate Surplus Food{% endif %}
-    </h2>
-    <p style="color: var(--grey-500); text-align: center; margin-bottom: 2rem;">
-        Provide accurate food details and expiry time. Our system will notify nearby verified recipients.
-    </p>
+<div class="form-card" style="max-width: 720px; padding: clamp(1.75rem, 4vw, 3rem);">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <span class="section-eyebrow">{% if is_edit %}UPDATE LISTING{% else %}SHARE SURPLUS FOOD{% endif %}</span>
+        <h1 style="color: var(--color-ink-900); font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; margin: 0 0 0.5rem;">
+            {% if is_edit %}Edit Food Donation Listing{% else %}Donate Surplus Food{% endif %}
+        </h1>
+        <p style="color: var(--color-ink-600); font-size: 0.9375rem; max-width: 540px; margin: 0 auto; line-height: 1.6;">
+            Provide accurate food information and an exact expiry deadline. Nearby verified community recipients will receive an instant alert.
+        </p>
+    </div>
 
     <form method="post" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
 
+        {% if form.non_field_errors %}
+            <div class="alert alert-error" role="alert">
+                {% for error in form.non_field_errors %}
+                    <span>{{ error }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <h3 style="color: var(--color-ink-900); font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem;">
+            Food Donation Details
+        </h3>
+
         <div class="form-group">
-            <label class="form-label">Food Name / Title</label>
+            <label class="form-label" for="{{ form.food_name.id_for_label }}">
+                Food Name / Title <span style="color: var(--color-danger-main);">*</span>
+            </label>
             {{ form.food_name }}
             {% if form.food_name.errors %}<div class="form-error">{{ form.food_name.errors.0 }}</div>{% endif %}
         </div>
 
         <div class="form-group">
-            <label class="form-label">Food Description</label>
+            <label class="form-label" for="{{ form.description.id_for_label }}">
+                Description, Dietary & Packaging Notes
+            </label>
             {{ form.description }}
+            <p class="form-help">Mention food condition, whether hot/chilled, packaging details, and any allergen warnings.</p>
             {% if form.description.errors %}<div class="form-error">{{ form.description.errors.0 }}</div>{% endif %}
         </div>
 
-                {% if not is_edit %}
-        <div class="form-group"
-             style="padding: 1rem; background: var(--green-50);
-                    border: 1px solid var(--grey-300);
-                    border-radius: var(--radius-md);">
-
-            <label class="form-label" for="id_food_photo">
-                Food Photo (Optional)
+        {% if not is_edit %}
+        <div class="form-group" style="padding: 1.25rem; background: var(--color-bg-subtle); border: 1px dashed var(--color-border-main); border-radius: var(--radius-md);">
+            <label class="form-label" for="id_food_photo" style="font-weight: 700; color: var(--color-ink-900);">
+                Cover Photograph (Optional)
             </label>
 
             {{ form.photo }}
 
-            <p class="form-help">
-                {{ form.photo.help_text }}
+            <p class="form-help" style="margin-top: 0.35rem;">
+                {{ form.photo.help_text|default:"Upload an authentic photo to give recipients confidence. JPG, PNG or WebP (max 5 MB)." }}
             </p>
 
             {% for error in form.photo.errors %}
                 <div class="form-error">{{ error }}</div>
             {% endfor %}
 
-            <div id="food-photo-preview-box" hidden
-                 style="margin-top: 1rem;">
-
-                <img id="food-photo-preview"
-                     alt="Selected food photo preview"
-                     style="display: block; width: 100%;
-                            max-width: 360px; height: 200px;
-                            object-fit: cover; border-radius: 8px;">
-
-                <button type="button"
-                        id="remove-food-photo"
-                        class="btn btn-outline btn-sm"
-                        style="margin-top: 0.75rem;
-                               color: var(--red-600);
-                               border-color: var(--red-600);">
-                    Remove selected photo
+            <div id="food-photo-preview-box" hidden style="margin-top: 1rem;">
+                <img id="food-photo-preview" alt="Selected food photo preview" style="display: block; width: 100%; max-width: 360px; height: 190px; object-fit: cover; border-radius: var(--radius-md); border: 1px solid var(--color-border-main);">
+                <button type="button" id="remove-food-photo" class="btn btn-outline btn-sm" style="margin-top: 0.75rem; color: var(--color-danger-main) !important; border-color: var(--color-danger-border);">
+                    Remove Selected Photo
                 </button>
             </div>
-
-            <p class="form-help" style="margin-top: 0.75rem;">
-                Your photo will be published with this listing.
-                You can also publish without a photo.
-            </p>
         </div>
         {% endif %}
 
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Quantity</label>
+                <label class="form-label" for="{{ form.quantity.id_for_label }}">
+                    Total Quantity <span style="color: var(--color-danger-main);">*</span>
+                </label>
                 {{ form.quantity }}
                 {% if form.quantity.errors %}<div class="form-error">{{ form.quantity.errors.0 }}</div>{% endif %}
             </div>
+
             <div class="form-group">
-                <label class="form-label">Unit of Measurement</label>
+                <label class="form-label" for="{{ form.unit.id_for_label }}">
+                    Unit of Measurement <span style="color: var(--color-danger-main);">*</span>
+                </label>
                 {{ form.unit }}
                 {% if form.unit.errors %}<div class="form-error">{{ form.unit.errors.0 }}</div>{% endif %}
             </div>
         </div>
 
         <div class="form-group">
-            <label class="form-label">Expiry Date & Time</label>
+            <label class="form-label" for="{{ form.expires_at.id_for_label }}">
+                Expiry Date & Time <span style="color: var(--color-danger-main);">*</span>
+            </label>
             {{ form.expires_at }}
-            <p class="form-help">Must be between 30 minutes and 72 hours from current time.</p>
+            <p class="form-help">Must be between 30 minutes and 72 hours from now to allow safe pickup and consumption.</p>
             {% if form.expires_at.errors %}<div class="form-error">{{ form.expires_at.errors.0 }}</div>{% endif %}
         </div>
 
-        <!-- Location Fields (Postal code removed) -->
-        <h4 style="color: var(--ink); margin: 1.5rem 0 0.75rem;">Pickup Location</h4>
+        <!-- Location Fields -->
+        <h3 style="color: var(--color-ink-900); font-size: 1.1rem; font-weight: 700; margin: 2rem 0 1rem; border-top: 1px solid var(--color-border-subtle); padding-top: 1.5rem;">
+            Pickup Handover Location
+        </h3>
+
         <div class="form-group">
-            <label class="form-label">Street Address</label>
+            <label class="form-label" for="{{ form.address.id_for_label }}">
+                Street Address / Handover Spot <span style="color: var(--color-danger-main);">*</span>
+            </label>
             {{ form.address }}
             {% if form.address.errors %}<div class="form-error">{{ form.address.errors.0 }}</div>{% endif %}
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Area / Neighborhood</label>
+                <label class="form-label" for="{{ form.area.id_for_label }}">
+                    Area / Neighborhood <span style="color: var(--color-danger-main);">*</span>
+                </label>
                 {{ form.area }}
                 {% if form.area.errors %}<div class="form-error">{{ form.area.errors.0 }}</div>{% endif %}
             </div>
+
             <div class="form-group">
-                <label class="form-label">City</label>
+                <label class="form-label" for="{{ form.city.id_for_label }}">
+                    City <span style="color: var(--color-danger-main);">*</span>
+                </label>
                 {{ form.city }}
                 {% if form.city.errors %}<div class="form-error">{{ form.city.errors.0 }}</div>{% endif %}
             </div>
         </div>
 
-        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-            <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+        <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
+            <button type="submit" id="submit-listing-btn" class="btn btn-primary btn-lg" style="flex: 2; min-width: 200px;">
                 {% if is_edit %}Save Changes{% else %}Publish Donation Listing{% endif %}
             </button>
             {% if is_edit and listing %}
-                <a href="{% url 'listings:donor_listing_detail' pk=listing.pk %}" class="btn btn-secondary btn-lg">Cancel</a>
+                <a href="{% url 'listings:donor_listing_detail' pk=listing.pk %}" class="btn btn-secondary btn-lg" style="flex: 1; min-width: 120px;">
+                    Cancel
+                </a>
             {% else %}
-                <a href="{% url 'listings:donor_listings' %}" class="btn btn-secondary btn-lg">Cancel</a>
+                <a href="{% url 'listings:donor_listings' %}" class="btn btn-secondary btn-lg" style="flex: 1; min-width: 120px;">
+                    Cancel
+                </a>
             {% endif %}
         </div>
     </form>
@@ -135,16 +156,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const preview = document.getElementById('food-photo-preview');
     const removeButton = document.getElementById('remove-food-photo');
 
-    if (!input || !previewBox || !preview || !removeButton) {
-        return;
-    }
+    if (!input || !previewBox || !preview || !removeButton) return;
 
     let previewUrl = null;
 
     function clearPreview() {
         previewBox.hidden = true;
         preview.removeAttribute('src');
-
         if (previewUrl) {
             URL.revokeObjectURL(previewUrl);
             previewUrl = null;
@@ -153,13 +171,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     input.addEventListener('change', function () {
         clearPreview();
-
         const file = input.files[0];
-
-        if (!file) {
-            return;
-        }
-
+        if (!file) return;
         previewUrl = URL.createObjectURL(file);
         preview.src = previewUrl;
         previewBox.hidden = false;

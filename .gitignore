@@ -26,8 +26,10 @@ wheels/
 
 # Django
 *.log
+*.bak
 local_settings.py
 db.sqlite3-journal
+db.sqlite3.bak
 media/
 
 # Environment & IDE
@@ -37,3 +39,8 @@ media/
 *.sublime-project
 *.sublime-workspace
 .DS_Store
+
+# Frontend & Testing
+node_modules/
+test-results/
+staticfiles/

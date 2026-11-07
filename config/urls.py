@@ -35,8 +35,16 @@ urlpatterns = [
     # Notifications App
     path('notifications/', include('notifications.urls')),
 ]
+from django.views.static import serve
+from django.urls import re_path
+
 if settings.DEBUG:
     urlpatterns += static(
         settings.MEDIA_URL,
         document_root=settings.MEDIA_ROOT
     )
+elif getattr(settings, 'SERVE_MEDIA_IN_PROD', False):
+    # Fallback media serving for staging/containerized environments without Nginx reverse proxy
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+    ]

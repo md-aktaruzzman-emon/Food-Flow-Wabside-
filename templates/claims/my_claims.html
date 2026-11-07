@@ -1,39 +1,59 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}{{ page_title|default:"Food Claims" }} — FoodFlow{% endblock %}
 
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
     <div>
-        <h1 style="color: var(--green-700); font-size: 2rem;">{{ page_title|default:"Food Claims" }}</h1>
-        <p style="color: var(--grey-500);">{{ page_subtitle|default:"Track your active reservations, pickup codes, and claim history." }}</p>
+        <span class="section-eyebrow">RESERVATIONS & HANDOVERS</span>
+        <h1 style="color: var(--color-ink-900); font-size: clamp(1.75rem, 3.5vw, 2.25rem); font-weight: 800; margin: 0 0 0.25rem;">
+            {{ page_title|default:"Food Claims" }}
+        </h1>
+        <p style="color: var(--color-ink-600); margin: 0;">
+            {{ page_subtitle|default:"Track your active reservations, pickup codes, and claim history." }}
+        </p>
     </div>
     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
         {% if user.is_recipient %}
-            <a href="{% url 'listings:browse_food' %}" class="btn btn-primary">Browse Available Food</a>
+            <a href="{% url 'listings:browse_food' %}" class="btn btn-primary">
+                Browse Available Food
+            </a>
         {% elif user.is_donor %}
-            <a href="{% url 'claims:verify_pickup' %}" class="btn btn-primary">Verify Pickup Code</a>
+            <a href="{% url 'claims:verify_pickup' %}" class="btn btn-primary">
+                🔑 Verify Pickup Token
+            </a>
         {% endif %}
     </div>
 </div>
 
-<!-- Status Filters for Authenticated Users -->
-<div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-    <a href="{% url 'claims:my_claims' %}" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-secondary{% endif %}">All</a>
-    <a href="{% url 'claims:my_claims' %}?status=pending" class="btn btn-sm {% if status_filter == 'pending' %}btn-primary{% else %}btn-secondary{% endif %}">Pending Pickup</a>
-    <a href="{% url 'claims:my_claims' %}?status=completed" class="btn btn-sm {% if status_filter == 'completed' %}btn-primary{% else %}btn-secondary{% endif %}">Completed</a>
-    <a href="{% url 'claims:my_claims' %}?status=cancelled" class="btn btn-sm {% if status_filter == 'cancelled' %}btn-secondary{% else %}btn-secondary{% endif %}" style="{% if status_filter == 'cancelled' %}background: var(--grey-700); color: white;{% endif %}">Cancelled</a>
-    <a href="{% url 'claims:my_claims' %}?status=expired" class="btn btn-sm {% if status_filter == 'expired' %}btn-secondary{% else %}btn-secondary{% endif %}" style="{% if status_filter == 'expired' %}background: var(--grey-700); color: white;{% endif %}">Expired</a>
+<!-- Status Filters -->
+<div style="display: flex; gap: 0.5rem; margin-bottom: 1.75rem; flex-wrap: wrap;">
+    <a href="{% url 'claims:my_claims' %}" class="btn btn-sm {% if not status_filter %}btn-primary{% else %}btn-secondary{% endif %}">
+        All Claims
+    </a>
+    <a href="{% url 'claims:my_claims' %}?status=pending" class="btn btn-sm {% if status_filter == 'pending' %}btn-primary{% else %}btn-secondary{% endif %}">
+        Pending Pickup
+    </a>
+    <a href="{% url 'claims:my_claims' %}?status=completed" class="btn btn-sm {% if status_filter == 'completed' %}btn-primary{% else %}btn-secondary{% endif %}">
+        Completed
+    </a>
+    <a href="{% url 'claims:my_claims' %}?status=cancelled" class="btn btn-sm {% if status_filter == 'cancelled' %}btn-primary{% else %}btn-secondary{% endif %}">
+        Cancelled
+    </a>
+    <a href="{% url 'claims:my_claims' %}?status=expired" class="btn btn-sm {% if status_filter == 'expired' %}btn-primary{% else %}btn-secondary{% endif %}">
+        Expired
+    </a>
 </div>
 
 {% if claims %}
 <div class="grid grid-2">
     {% for claim in claims %}
-    <div class="card" style="border-left: 4px solid {% if claim.status == 'pending' %}var(--green-700){% elif claim.status == 'completed' %}var(--grey-500){% else %}var(--red-600){% endif %};">
+    <div class="card" style="border-left: 4px solid {% if claim.status == 'pending' %}var(--color-primary-700){% elif claim.status == 'completed' %}var(--color-primary-500){% elif claim.status == 'cancelled' %}var(--color-ink-400){% else %}var(--color-danger-main){% endif %};">
         <div class="card-header">
             <div>
                 <h3 class="card-title">{{ claim.listing.food_name }}</h3>
-                <span class="card-subtitle">Claim #{{ claim.id }} &bull; {{ claim.claimed_at|date:"M d, Y, h:i A" }}</span>
+                <span class="card-subtitle">Claim #{{ claim.id }} &bull; Reserved on {{ claim.claimed_at|date:"M d, Y, h:i A" }}</span>
             </div>
             <div>
                 <span class="badge badge-{{ claim.status }}">{{ claim.get_status_display }}</span>
@@ -43,56 +63,61 @@
         <div class="card-body">
             {% if user.is_donor %}
                 <!-- Donor View: Show recipient who claimed -->
-                <p style="font-size: 0.95rem; color: var(--grey-700); margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9375rem; color: var(--color-ink-700); margin-bottom: 0.5rem;">
                     Claimed by: <strong>{{ claim.recipient.user.full_name|default:claim.recipient.user.username }}</strong> ({{ claim.recipient.get_recipient_type_display }})
                 </p>
-                <p style="font-size: 0.95rem; color: var(--grey-700); margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9375rem; color: var(--color-ink-700); margin-bottom: 0.5rem;">
                     Reserved Quantity: <strong>{{ claim.claimed_quantity|floatformat:2 }} {{ claim.listing.unit }}</strong>
                 </p>
-                <p style="font-size: 0.95rem; color: var(--grey-700); margin-bottom: 0.75rem;">
-                    Recipient Phone: <strong>{{ claim.recipient.user.phone|default:'Not provided' }}</strong>
+                <p style="font-size: 0.9375rem; color: var(--color-ink-600); margin-bottom: 0.5rem;">
+                    Recipient Contact: <strong>{{ claim.recipient.user.phone|default:'Not provided' }}</strong>
                 </p>
             {% else %}
                 <!-- Recipient View: Show donor and pickup location -->
-                <p style="font-size: 0.95rem; color: var(--grey-700); margin-bottom: 0.75rem;">
-                    Donor: <strong>{{ claim.listing.donor.user.full_name }}</strong>
+                <p style="font-size: 0.9375rem; color: var(--color-ink-700); margin-bottom: 0.5rem;">
+                    Donor: <strong>{{ claim.listing.donor.user.full_name|default:claim.listing.donor.user.username }}</strong>
                 </p>
-                <p style="font-size: 0.95rem; color: var(--grey-700); margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9375rem; color: var(--color-ink-700); margin-bottom: 0.5rem;">
                     Reserved Quantity: <strong>{{ claim.claimed_quantity|floatformat:2 }} {{ claim.listing.unit }}</strong>
                 </p>
-                <p style="font-size: 0.95rem; color: var(--grey-700); margin-bottom: 0.75rem;">
+                <p style="font-size: 0.9375rem; color: var(--color-ink-600); margin-bottom: 0.5rem;">
                     📍 Pickup Address: <em>{{ claim.listing.location.address }}, {{ claim.listing.location.area }}, {{ claim.listing.location.city }}</em>
                 </p>
             {% endif %}
 
-            <!-- Pickup Code Display Box -->
+            <!-- Pickup Code Display Box for Recipient -->
             {% if user.is_recipient and claim.status == 'pending' %}
-            <div class="pickup-code-box" style="margin: 1rem 0;">
-                <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--grey-500); font-weight: 700; margin-bottom: 0.25rem;">
-                    Present this code to donor at pickup:
-                </div>
-                <div class="pickup-code-display">{{ claim.pickup_code }}</div>
+            <div class="pickup-code-box" style="margin: 1rem 0; padding: 1rem;">
+                <div class="pickup-code-label">Present this token to donor during pickup:</div>
+                <div class="pickup-code-display" style="font-size: 1.85rem;">{{ claim.pickup_code }}</div>
+                <button type="button" class="btn btn-secondary btn-sm copy-token-btn" data-token="{{ claim.pickup_code }}">
+                    Copy Code
+                </button>
             </div>
             {% endif %}
 
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap; gap: 0.5rem;">
-                <span style="font-size: 0.85rem; color: {% if claim.is_expired %}var(--red-600){% else %}var(--amber-600){% endif %}; font-weight: 600;">
-                    ⏰ Pickup Deadline: {{ claim.pickup_deadline|date:"M d, h:i A" }}
+            <div style="margin-top: 0.75rem;">
+                <span style="font-size: 0.875rem; color: {% if claim.is_expired %}var(--color-danger-text){% else %}var(--color-accent-700){% endif %}; font-weight: 600;">
+                    ⏰ Pickup Deadline: {{ claim.pickup_deadline|date:"l, M d, h:i A" }}
                 </span>
             </div>
         </div>
 
-        <div class="card-footer" style="display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center;">
-            <a href="{% url 'claims:claim_detail' pk=claim.pk %}" class="btn btn-secondary btn-sm">View Details</a>
+        <div class="card-footer" style="display: flex; gap: 0.75rem; justify-content: flex-end; align-items: center; flex-wrap: wrap;">
+            <a href="{% url 'claims:claim_detail' pk=claim.pk %}" class="btn btn-secondary btn-sm">
+                View Full Claim Details
+            </a>
 
             {% if user.is_donor and claim.status == 'pending' %}
-                <a href="{% url 'claims:verify_pickup' %}" class="btn btn-primary btn-sm">Verify Pickup</a>
+                <a href="{% url 'claims:verify_pickup' %}" class="btn btn-primary btn-sm">
+                    Verify Pickup Code
+                </a>
             {% endif %}
 
             {% if user.is_recipient and claim.can_be_cancelled %}
                 <form action="{% url 'claims:claim_cancel' pk=claim.pk %}" method="post" class="cancel-claim-form" style="display: inline;">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-outline btn-sm" style="color: var(--red-600); border-color: var(--red-600);">
+                    <button type="submit" class="btn btn-outline btn-sm" style="color: var(--color-danger-main) !important; border-color: var(--color-danger-border);">
                         Cancel Reservation
                     </button>
                 </form>
@@ -102,18 +127,24 @@
     {% endfor %}
 </div>
 {% else %}
-<div class="card" style="text-align: center; padding: 4rem 2rem;">
-    <div style="font-size: 3rem; margin-bottom: 1rem;">📦</div>
-    <h3 style="color: var(--ink); margin-bottom: 0.5rem;">No Claims Found</h3>
-    <p style="color: var(--grey-500); max-width: 500px; margin: 0 auto 1.5rem;">
+<div class="card" style="text-align: center; padding: 4rem 1.5rem; max-width: 580px; margin: 2rem auto;">
+    <div style="font-size: 3rem; margin-bottom: 1rem;" aria-hidden="true">📦</div>
+    <h2 style="color: var(--color-ink-900); font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem;">
+        No Claims Found
+    </h2>
+    <p style="color: var(--color-ink-500); margin-bottom: 1.5rem; line-height: 1.6;">
         {% if user.is_recipient %}
-            You haven't made any food claims yet. Check out available listings in your area!
+            You haven't reserved any surplus food donations yet. Discover available food nearby!
         {% else %}
             No claims have been placed for your donated food items yet.
         {% endif %}
     </p>
     {% if user.is_recipient %}
-        <a href="{% url 'listings:browse_food' %}" class="btn btn-primary">Browse Food Donations</a>
+        <div>
+            <a href="{% url 'listings:browse_food' %}" class="btn btn-primary">
+                Browse Available Food
+            </a>
+        </div>
     {% endif %}
 </div>
 {% endif %}

@@ -1,26 +1,39 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Browse Available Surplus Food — FoodFlow{% endblock %}
 
 {% block content %}
 <div style="margin-bottom: 2rem;">
-    <h1 style="color: var(--green-700); font-size: 2rem;">Browse Available Food Donations</h1>
-    <p style="color: var(--grey-500);">
-        Live expiry-aware surplus food listings available for claiming by verified recipients.
+    <span class="section-eyebrow">COMMUNITY FOOD DIRECTORY</span>
+    <h1 style="color: var(--color-ink-900); font-size: clamp(1.75rem, 3.5vw, 2.35rem); font-weight: 800; line-height: 1.25; margin-bottom: 0.5rem;">
+        Browse Available Food Donations
+    </h1>
+    <p style="color: var(--color-ink-600); font-size: 1.05rem; max-width: 680px; margin: 0; line-height: 1.6;">
+        Live expiry-aware surplus food listings available for claiming by verified community recipients.
     </p>
 </div>
 
-<!-- Search & Filters Bar -->
-<div class="card" style="margin-bottom: 2rem; padding: 1.25rem;">
+<!-- Search & Filtering Toolbar -->
+<div class="card" style="margin-bottom: 2.25rem; padding: 1.5rem; background: var(--color-surface); box-shadow: var(--shadow-sm);">
     <form method="get" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
-        <div style="flex: 2; min-width: 200px;">
-            <label class="form-label" style="font-size: 0.85rem;">Search Food or Keyword</label>
-            <input type="text" name="q" value="{{ q }}" class="form-input" placeholder="e.g. Rice, Bread, Curry, Apples...">
+        <div style="flex: 2; min-width: 220px;">
+            <label for="search-input" class="form-label" style="font-size: 0.85rem;">
+                Search by Food Item or Keyword
+            </label>
+            <input type="text"
+                   id="search-input"
+                   name="q"
+                   value="{{ q }}"
+                   class="form-input"
+                   placeholder="e.g. Rice, Bread, Curry, Apples...">
         </div>
 
-        <div style="flex: 1; min-width: 140px;">
-            <label class="form-label" style="font-size: 0.85rem;">City</label>
-            <select name="city" class="form-select">
+        <div style="flex: 1; min-width: 150px;">
+            <label for="city-select" class="form-label" style="font-size: 0.85rem;">
+                Filter by City
+            </label>
+            <select id="city-select" name="city" class="form-select">
                 <option value="">All Cities</option>
                 {% for c in available_cities %}
                     <option value="{{ c }}" {% if selected_city == c %}selected{% endif %}>{{ c }}</option>
@@ -28,9 +41,11 @@
             </select>
         </div>
 
-        <div style="flex: 1; min-width: 140px;">
-            <label class="form-label" style="font-size: 0.85rem;">Area</label>
-            <select name="area" class="form-select">
+        <div style="flex: 1; min-width: 150px;">
+            <label for="area-select" class="form-label" style="font-size: 0.85rem;">
+                Filter by Area
+            </label>
+            <select id="area-select" name="area" class="form-select">
                 <option value="">All Areas</option>
                 {% for a in available_areas %}
                     <option value="{{ a }}" {% if selected_area == a %}selected{% endif %}>{{ a }}</option>
@@ -38,12 +53,34 @@
             </select>
         </div>
 
-        <div style="display: flex; gap: 0.5rem;">
-            <button type="submit" class="btn btn-primary">Filter</button>
-            <a href="{% url 'listings:browse_food' %}" class="btn btn-secondary">Clear</a>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button type="submit" class="btn btn-primary" style="min-width: 100px;">
+                Filter
+            </button>
+            {% if q or selected_city or selected_area %}
+                <a href="{% url 'listings:browse_food' %}" class="btn btn-secondary">
+                    Clear Filters
+                </a>
+            {% endif %}
         </div>
     </form>
 </div>
+
+<!-- Active Filter Status Indicator -->
+{% if q or selected_city or selected_area %}
+    <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+        <span style="font-size: 0.875rem; color: var(--color-ink-500); font-weight: 600;">Active Filters:</span>
+        {% if q %}
+            <span class="badge badge-completed">Search: "{{ q }}"</span>
+        {% endif %}
+        {% if selected_city %}
+            <span class="badge badge-available">City: {{ selected_city }}</span>
+        {% endif %}
+        {% if selected_area %}
+            <span class="badge badge-available">Area: {{ selected_area }}</span>
+        {% endif %}
+    </div>
+{% endif %}
 
 <!-- Food Listings Grid -->
 {% if listings %}
@@ -53,13 +90,19 @@
     {% endfor %}
 </div>
 {% else %}
-<div class="card" style="text-align: center; padding: 4rem 2rem;">
-    <div style="font-size: 3rem; margin-bottom: 1rem;">🍃</div>
-    <h3 style="color: var(--ink); margin-bottom: 0.5rem;">No Available Food Matching Your Filters</h3>
-    <p style="color: var(--grey-500); max-width: 500px; margin: 0 auto 1.5rem;">
-        Food donations expire or get claimed quickly. Try adjusting your search query or area filters.
+<div class="card" style="text-align: center; padding: 4rem 1.5rem; max-width: 600px; margin: 2rem auto;">
+    <div style="font-size: 3rem; margin-bottom: 1rem;" aria-hidden="true">🍃</div>
+    <h2 style="color: var(--color-ink-900); font-size: 1.35rem; font-weight: 800; margin-bottom: 0.5rem;">
+        No Active Food Donations Match Your Criteria
+    </h2>
+    <p style="color: var(--color-ink-600); line-height: 1.6; margin-bottom: 1.75rem;">
+        Donations get claimed and picked up rapidly. Try expanding your search to all cities or clearing area filters.
     </p>
-    <a href="{% url 'listings:browse_food' %}" class="btn btn-outline">Reset All Filters</a>
+    <div>
+        <a href="{% url 'listings:browse_food' %}" class="btn btn-primary">
+            Reset All Filters
+        </a>
+    </div>
 </div>
 {% endif %}
 {% endblock %}
