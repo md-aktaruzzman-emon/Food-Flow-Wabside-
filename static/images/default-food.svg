@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="800" height="500">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1b4332" />
+      <stop offset="50%" stop-color="#2d6a4f" />
+      <stop offset="100%" stop-color="#40916c" />
+    </linearGradient>
+    <linearGradient id="bowlGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#d8f3dc" />
+      <stop offset="100%" stop-color="#b7e4c7" />
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.15" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" fill="url(#bgGrad)" />
+  <rect width="800" height="500" fill="url(#glow)" />
+
+  <!-- Subtle grid pattern -->
+  <g opacity="0.06" stroke="#ffffff" stroke-width="1">
+    <line x1="0" y1="100" x2="800" y2="100" />
+    <line x1="0" y1="200" x2="800" y2="200" />
+    <line x1="0" y1="300" x2="800" y2="300" />
+    <line x1="0" y1="400" x2="800" y2="400" />
+    <line x1="200" y1="0" x2="200" y2="500" />
+    <line x1="400" y1="0" x2="400" y2="500" />
+    <line x1="600" y1="0" x2="600" y2="500" />
+  </g>
+
+  <!-- Central Food Illustration -->
+  <g transform="translate(400, 220)">
+    <!-- Food Bowl Base -->
+    <path d="M -110,-10 C -110,80 110,80 110,-10 Z" fill="url(#bowlGrad)" filter="drop-shadow(0 12px 24px rgba(0,0,0,0.25))" />
+    <ellipse cx="0" cy="-10" rx="110" ry="22" fill="#e9d8a6" />
+    <ellipse cx="0" cy="-12" rx="95" ry="17" fill="#ee9b00" opacity="0.85" />
+    
+    <!-- Food toppings/garnish -->
+    <circle cx="-35" cy="-14" r="10" fill="#2d6a4f" />
+    <circle cx="15" cy="-16" r="12" fill="#e76f51" />
+    <circle cx="50" cy="-12" r="9" fill="#52b788" />
+    <circle cx="-5" cy="-13" r="11" fill="#f4a261" />
+
+    <!-- Steam swirls -->
+    <path d="M -40,-45 Q -30,-70 -45,-95 Q -60,-120 -40,-140" fill="none" stroke="#d8f3dc" stroke-width="4" stroke-linecap="round" opacity="0.5" />
+    <path d="M 0,-50 Q 15,-75 0,-105 Q -15,-135 5,-155" fill="none" stroke="#d8f3dc" stroke-width="5" stroke-linecap="round" opacity="0.7" />
+    <path d="M 40,-45 Q 50,-70 35,-95 Q 20,-120 40,-140" fill="none" stroke="#d8f3dc" stroke-width="4" stroke-linecap="round" opacity="0.5" />
+  </g>
+
+  <!-- Badge / Caption -->
+  <g transform="translate(400, 390)">
+    <rect x="-130" y="-18" width="260" height="36" rx="18" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" />
+    <text x="0" y="6" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="600" fill="#ffffff" text-anchor="middle" letter-spacing="1">FRESH COMMUNITY DONATION</text>
+  </g>
+</svg>

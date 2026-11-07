@@ -92,44 +92,59 @@
     <div class="process-grid">
         <!-- Step 1 -->
         <article class="process-card">
-            <div class="process-icon" aria-hidden="true">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
+            <div class="process-card-media">
+                <img src="{% static 'images/donation.jpg' %}" alt="Donors posting surplus food" class="process-card-img" loading="lazy">
             </div>
-            <h3 class="process-title">Donors Post Surplus Food</h3>
-            <p class="process-desc">
-                Restaurants, grocers, and households post available surplus with portions, description, pickup location, and exact expiry deadline.
-            </p>
+            <div class="process-card-body">
+                <div class="process-icon" aria-hidden="true">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </div>
+                <h3 class="process-title">Donors Post Surplus Food</h3>
+                <p class="process-desc">
+                    Restaurants, grocers, and households post available surplus with portions, description, pickup location, and exact expiry deadline.
+                </p>
+            </div>
         </article>
 
         <!-- Step 2 -->
         <article class="process-card">
-            <div class="process-icon" aria-hidden="true">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                </svg>
+            <div class="process-card-media">
+                <img src="{% static 'images/food-sharing.jpg' %}" alt="Recipients receiving alerts and claiming food" class="process-card-img" loading="lazy">
             </div>
-            <h3 class="process-title">Recipients Receive Alerts & Claim</h3>
-            <p class="process-desc">
-                Verified charities, shelters, and families receive local alerts, inspect details, and reserve the exact quantity needed.
-            </p>
+            <div class="process-card-body">
+                <div class="process-icon" aria-hidden="true">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                </div>
+                <h3 class="process-title">Recipients Receive Alerts & Claim</h3>
+                <p class="process-desc">
+                    Verified charities, shelters, and families receive local alerts, inspect details, and reserve the exact quantity needed.
+                </p>
+            </div>
         </article>
 
         <!-- Step 3 -->
         <article class="process-card">
-            <div class="process-icon" aria-hidden="true">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                    <polyline points="9 12 11 14 15 10"></polyline>
-                </svg>
+            <div class="process-card-media">
+                <img src="{% static 'images/pickup.jpg' %}" alt="Verified physical handover at pickup" class="process-card-img" loading="lazy">
             </div>
-            <h3 class="process-title">Verified Physical Handover</h3>
-            <p class="process-desc">
-                The recipient presents their unique 8-character verification token at pickup. The donor verifies it instantly on FoodFlow to complete handover.
-            </p>
+            <div class="process-card-body">
+                <div class="process-icon" aria-hidden="true">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        <polyline points="9 12 11 14 15 10"></polyline>
+                    </svg>
+                </div>
+                <h3 class="process-title">Verified Physical Handover</h3>
+                <p class="process-desc">
+                    The recipient presents their unique 8-character verification token at pickup. The donor verifies it instantly on FoodFlow to complete handover.
+                </p>
+            </div>
         </article>
     </div>
 </section>
@@ -227,6 +242,9 @@
     <div class="benefits-grid">
         <!-- Section 5: Benefits for Donors -->
         <article class="benefit-card benefit-card-donor">
+            <div class="benefit-card-media">
+                <img src="{% static 'images/donation.jpg' %}" alt="Commercial food donor preparing packaged meals" class="benefit-card-img" loading="lazy">
+            </div>
             <div class="benefit-card-header">
                 <div class="process-icon" style="margin-bottom: 0;" aria-hidden="true">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -269,6 +287,9 @@
 
         <!-- Section 6: Benefits for Recipients -->
         <article class="benefit-card benefit-card-recipient">
+            <div class="benefit-card-media">
+                <img src="{% static 'images/community.jpg' %}" alt="Community members sharing wholesome food" class="benefit-card-img" loading="lazy">
+            </div>
             <div class="benefit-card-header">
                 <div class="process-icon" style="margin-bottom: 0; background-color: var(--color-accent-50); color: var(--color-accent-700);" aria-hidden="true">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

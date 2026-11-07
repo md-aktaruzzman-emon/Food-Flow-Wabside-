@@ -1,10 +1,12 @@
+{% load static %}
 {% with photos=listing.photos.all %}
 <div class="food-photo-gallery">
     {% with cover=photos|first %}
         {% if cover %}
             <img src="{{ cover.image.url }}"
                  alt="{{ listing.food_name }}"
-                 class="food-detail-photo">
+                 class="food-detail-photo"
+                 onerror="this.onerror=null;this.src='{% static 'images/default-food.svg' %}';">
 
             {% if photos|length > 1 %}
                 <div class="food-photo-thumbnails">
@@ -15,15 +17,17 @@
                                 aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}">
                             <img src="{{ photo.image.url }}"
                                  alt="{{ photo.caption|default:listing.food_name }}"
-                                 loading="lazy">
+                                 loading="lazy"
+                                 onerror="this.onerror=null;this.src='{% static 'images/default-food.svg' %}';">
                         </button>
                     {% endfor %}
                 </div>
             {% endif %}
         {% else %}
-            <div class="food-photo-placeholder food-detail-photo" aria-label="No photograph uploaded">
-                <span>🍲 No Photograph Uploaded</span>
-            </div>
+            <img src="{% static 'images/default-food.svg' %}"
+                 alt="{{ listing.food_name }}"
+                 class="food-detail-photo"
+                 style="object-fit: cover;">
         {% endif %}
     {% endwith %}
 </div>

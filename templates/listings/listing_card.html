@@ -4,11 +4,13 @@
             <img src="{{ cover.image.url }}"
                  alt="{{ listing.food_name }}"
                  class="food-card-photo"
-                 loading="lazy">
+                 loading="lazy"
+                 onerror="this.onerror=null;this.src='{% static 'images/default-food.svg' %}';">
         {% else %}
-            <div class="food-photo-placeholder food-card-photo" aria-label="No photograph provided">
-                <span>🍲 No Photo Provided</span>
-            </div>
+            <img src="{% static 'images/default-food.svg' %}"
+                 alt="{{ listing.food_name }}"
+                 class="food-card-photo"
+                 loading="lazy">
         {% endif %}
     {% endwith %}
 
